@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>TactixGlobal · Operator Simulator</title>
-  <link rel="stylesheet" href="styles.css?v=patrol-orbit-360-1">
+  <link rel="stylesheet" href="styles.css?v=air-contact-1">
 </head>
 <body>
   <header class="topbar">
@@ -43,7 +43,7 @@
         <small>Tap arrows to aim. Auto resumes tracking or scanning.</small>
       </div>
       <div id="expandedControls" class="expanded-controls"></div>
-      <small>Vehicle touchscreen · command-center transmission is simulated</small>
+      <small id="touchscreenFootnote">Vehicle touchscreen · command-center transmission is simulated</small>
       </div>
     </dialog>
     <div id="ptzScanReadout" class="ptz-scan-readout" hidden><span id="ptzScanArrow" aria-hidden="true">↑</span><div><strong id="ptzScanStatus">PTZ STANDBY</strong><small id="ptzScanAngle">0° · VEHICLE RELATIVE</small></div></div>
@@ -53,7 +53,7 @@
       <h1>Choose your scenario</h1>
       <div class="scenario-cards">
         <article><h2>Night Patrol</h2><p>Join the patrol, detect a concealed person and review a recorded thermal clip.</p><button id="enterButton" disabled>LOADING…</button></article>
-        <article><h2>Interceptor Launch</h2><p>Review an aerial contact from the parked vehicle and authorize a launch demonstration.</p><button id="interceptionButton" disabled>LOADING…</button></article>
+        <article><h2>Air Contact</h2><p>Acquire and track a quadcopter, then authorize an interceptor launch demonstration. No interception is shown.</p><button id="interceptionButton" disabled>LOADING…</button></article>
       </div>
       <small>Mouse or touch · Choose a scenario to begin</small>
     </section>
@@ -133,6 +133,6 @@
   <script src="vendor/three-0.128.0/three.min.js"></script>
   <script src="vendor/three-0.128.0/GLTFLoader.js"></script>
   <script src="js/launch-audio.js?v=1"></script>
-  <script src="js/simulator.js?v=patrol-orbit-360-1"></script>
+  <script src="js/simulator.js?v=air-contact-1"></script>
 </body>
 </html>

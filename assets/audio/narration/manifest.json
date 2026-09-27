@@ -131,6 +131,42 @@
       "seconds": 9.375,
       "sha256": "c08d58c9a323191bedeb41c690d7775c88f77c934f73901aa4ccea7f903a18f7",
       "slowdown_seconds": 8.375
+    },
+    "Air patrol active. Sentry One PTZ scanning.": {
+      "file": "assets/audio/narration/air_patrol.mp3?v=3d809207aca2",
+      "spoken_text": "Air patrol active. Sentry One P T Z scanning.",
+      "seconds": 4.1,
+      "sha256": "3d809207aca2cfe2e96330912366c0107e2710cd7394fe3bed1913815c80d2c3"
+    },
+    "Air contact detected, two o’clock. Sentry One PTZ slewing.": {
+      "file": "assets/audio/narration/air_cue.mp3?v=c42ede4459c2",
+      "spoken_text": "Air contact detected, two o’clock. Sentry One P T Z slewing.",
+      "seconds": 5.05,
+      "sha256": "c42ede4459c2d9150f650fecd8832b32bdda592e0f8fedca4102ea806ac99877"
+    },
+    "Quadcopter confirmed. Tracking Air Contact One.": {
+      "file": "assets/audio/narration/air_confirmed.mp3?v=18e62d38b83a",
+      "spoken_text": "Quadcopter confirmed. Tracking Air Contact One.",
+      "seconds": 3.775,
+      "sha256": "18e62d38b83a4206880368ce59accae3ffab6a818e3077579674c752994159f8"
+    },
+    "Confirm interceptor launch demonstration.": {
+      "file": "assets/audio/narration/air_request.mp3?v=df6e4ccd89d8",
+      "spoken_text": "Confirm interceptor launch demonstration.",
+      "seconds": 3.4,
+      "sha256": "df6e4ccd89d8bdfed8200872aaa55369bea019de14ae41b61eb1b7f51705a2aa"
+    },
+    "Launch confirmed. Stopping vehicle before launch.": {
+      "file": "assets/audio/narration/air_stop.mp3?v=b3290cc484b4",
+      "spoken_text": "Launch confirmed. Stopping vehicle before launch.",
+      "seconds": 3.7,
+      "sha256": "b3290cc484b420bf262f5920f0dcf5ab44cb5f27c1d7234a203a26e545eeded2"
+    },
+    "Interceptor launching.": {
+      "file": "assets/audio/narration/air_launch.mp3?v=f7387b26213e",
+      "spoken_text": "Interceptor launching.",
+      "seconds": 2.2,
+      "sha256": "f7387b26213ef00243beb318ab32352413136f5fab47bf84ca1c3a877e7b99de"
     }
   }
 }

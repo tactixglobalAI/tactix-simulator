@@ -133,6 +133,7 @@
   let entryDoor = null;
   let ptzMount = null;
   let selectedScenario="patrol", launchData=null, launchFlight=null, launchRotors=[], launchTime=0, launchCount=0, aerialContact=null;
+  const air = {phase:"IDLE",time:0,acquired:0,pan:0,tilt:0,fov:32,cueZ:0,launchBearing:0,confirmed:false,history:[]};
   let roofHardware=null, ptzPan=null, ptzTilt=null, ptzOptical=null, ptzRig=null, interceptorRig=null;
   const interactionTargets = {};
   const rigBones = {};
@@ -191,7 +192,7 @@
   const narrationHistory=[];
   let narrationError = null;
   const narrationBuffers = new Map();
-  const narrationManifest = fetch('assets/audio/narration/manifest.json?v=pacing-2')
+  const narrationManifest = fetch('assets/audio/narration/manifest.json?v=air-1')
     .then(response => { if (!response.ok) throw new Error('Narration manifest unavailable'); return response.json(); })
     .catch(error => { narrationError = error.message; return { clips: {} }; });
   let officerLoaded = false;
@@ -1137,7 +1138,10 @@
 
   function touchscreenControls() {
     const buttons=touchscreenBaseControls();
-    if(selectedScenario==="interception")return buttons;
+    if(selectedScenario==="interception"){
+      if(['TRACKING','CONFIRM'].includes(air.phase))buttons.push({x:438,w:258,y:8,h:48,label:'VOICE COMMAND',physicalOnly:true,action:()=>{expandedDialog.showModal();expandedLabel='';}});
+      return buttons;
+    }
     if(seatedStates.includes(state) && state!==STATES.VEHICLE_FIRST_PERSON)buttons.push({x:438,w:258,y:8,h:48,label:manualPtz?'PTZ CONTROLS':'MANUAL PTZ',physicalOnly:true,action:()=>{
       expandedDialog.showModal();expandedLabel='';if(!manualPtz)manualButton.click();
     }});
@@ -1146,7 +1150,12 @@
   }
 
   function touchscreenBaseControls() {
-    if(state===STATES.LAUNCH_READY)return [{x:24,w:440,label:"AUTHORIZE LAUNCH",action:authorizeLaunch},{x:476,w:220,label:"EXIT",action:()=>location.reload()}];
+    if(selectedScenario==='interception') {
+      if(air.phase==='CONFIRM')return [{x:24,w:324,label:'CONFIRM LAUNCH',action:confirmAirLaunch},{x:372,w:324,label:'CANCEL',action:()=>{airPhase('TRACKING');setMessage('Launch cancelled. Tracking Air Contact One.',false);}}];
+      if(air.phase==='TRACKING')return [{x:24,w:208,label:'FOLLOW',action:()=>setMessage('Following Air Contact One. Launch requires confirmation.',false)},{x:256,w:208,label:'LAUNCH DEMO',action:requestAirLaunch},{x:488,w:208,label:'DISMISS',action:dismissAirContact}];
+      if(air.phase==='DISMISSED')return [{x:24,w:672,label:'END DEMO',action:finishAirObservation}];
+      return [];
+    }
     if(state===STATES.LAUNCHING)return [];
     if(state===STATES.VEHICLE_FIRST_PERSON)return [];
     if(!seatedStates.includes(state))return [];
@@ -1169,7 +1178,7 @@
   }
 
   function suggestedScreenAction(label) {
-    return ['SEND CLIP','KEEP LOCAL','PROCEED WITH PATROL','AUTHORIZE LAUNCH'].includes(label);
+    return ['SEND CLIP','KEEP LOCAL','PROCEED WITH PATROL','AUTHORIZE LAUNCH','CONFIRM LAUNCH','LAUNCH DEMO'].includes(label);
   }
 
   function renderTouchscreen() {
@@ -1177,17 +1186,17 @@
     const ui=touchscreenUI,ctx=ui.context;
     const sendPulse=eventClip.status==='READY' && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const pulseTime=sendPulse?Math.floor(performance.now()/100):0;
-    const label=[pulseTime,state,observationPhase,manualPtz,eventClip.status,driverSpeedTarget,sensorVisible,sensorThermal,Math.round(vehicleSpeed*3.6).toString(),el.message.textContent].join('|');
+    const label=[selectedScenario==='interception'?Math.floor(air.time*4):0,pulseTime,state,observationPhase,manualPtz,eventClip.status,driverSpeedTarget,sensorVisible,sensorThermal,Math.round(vehicleSpeed*3.6).toString(),el.message.textContent].join('|');
     if(label!==ui.lastLabel) {
       ui.lastLabel=label;
       ctx.fillStyle='#07121b';ctx.fillRect(0,0,720,480);
       ctx.fillStyle='#b9d8e9';ctx.font='bold 30px monospace';ctx.fillText('SENTRY ONE PTZ',24,34);
       ctx.fillStyle=ptzHolding()?'#efb94f':'#72d6ad';ctx.font='20px monospace';if(state===STATES.VEHICLE_FIRST_PERSON)ctx.fillText('STANDBY',420,31);
       ctx.fillStyle='#99adbc';ctx.font='20px monospace';
-      ctx.fillText(Math.round(vehicleSpeed*3.6).toString()+' km/h · '+(selectedScenario==='interception'?'AERIAL CONTACT · UNCONFIRMED':ptzHolding()?'CROUCHING / PARTLY CONCEALED':state===STATES.DISMISSED?'DISMISSED · SCAN RESUMED':'VISIBLE + THERMAL ONLINE'),24,61);
+      ctx.fillText(Math.round(vehicleSpeed*3.6).toString()+' km/h · '+(selectedScenario==='interception'?(air.confirmed?'AIR CONTACT 01 · QUADCOPTER':air.phase==='PATROL'?'AIR SCAN':'AIR CONTACT · UNCONFIRMED'):ptzHolding()?'CROUCHING / PARTLY CONCEALED':state===STATES.DISMISSED?'DISMISSED · SCAN RESUMED':'VISIBLE + THERMAL ONLINE'),24,61);
       ctx.fillStyle=eventClip.status==='RECORDING'?'#ffb45a':'#b9d8e9';ctx.font='18px monospace';
       const recordingLabel={RECORDED:'CLIP RECORDED · OBSERVING PERSON',RECORDING:'● RECORDING ACTIVITY CLIP · 10 SECONDS',FINALIZING:'FINALIZING CLIP…',READY:'SEND CLIP TO COMMAND CENTER? · SIMULATED LINK',KEPT_LOCAL:'CLIP KEPT IN THIS SESSION · SAVE TO RETAIN',TRANSMITTING:'TRANSMITTING CLIP… · SIMULATED TRANSMISSION',SIMULATED_SEND:'✓ CLIP TRANSMITTED · '+eventClip.sentAt+' · SIMULATED',ERROR:'RECORDING FAILED',UNAVAILABLE:'RECORDING UNSUPPORTED IN THIS BROWSER'}[eventClip.status];
-      if(selectedScenario==='interception')ctx.fillText(state===STATES.LAUNCH_READY?'PARKED · REVIEW CONTACT BEFORE LAUNCH':launchPhase(),24,83);
+      if(selectedScenario==='interception'){ctx.fillStyle='#efb94f';ctx.fillText(airStatus(),24,83);}
       else if(recordingLabel)ctx.fillText(recordingLabel,24,83);
       if(!sensorVisible) {
         ctx.fillStyle='#b9d8e9';ctx.font='bold 32px monospace';ctx.textAlign='center';
@@ -1218,6 +1227,33 @@
   const expandedPixels=new Uint8Array(512*288*4);
   const expandedImage=expandedContext.createImageData(512,288);
   let expandedLastFrame=0,expandedLabel='';
+  const airVoiceButton=document.createElement('button');airVoiceButton.id='airVoiceButton';airVoiceButton.type='button';airVoiceButton.textContent='USE VOICE COMMAND';airVoiceButton.hidden=true;
+  const airVoiceHint=document.createElement('small');airVoiceHint.id='airVoiceHint';airVoiceHint.hidden=true;
+  document.getElementById('expandedControls').after(airVoiceButton,airVoiceHint);
+  airVoiceButton.addEventListener('click',listenAirCommand);
+  function airCommand(words){
+    const command=words.toLowerCase().replace(/[^a-z ]/g,'').trim();
+    if(selectedScenario!=='interception')return false;
+    if(command==='confirm' && air.phase==='CONFIRM'){confirmAirLaunch();return true;}
+    if(command==='cancel' && air.phase==='CONFIRM'){airPhase('TRACKING');setMessage('Launch cancelled. Tracking Air Contact One.',false);return true;}
+    if(air.phase!=='TRACKING')return false;
+    if(command==='follow'){setMessage('Following Air Contact One. Launch requires confirmation.',false);return true;}
+    if(command==='dismiss'){dismissAirContact();return true;}
+    if(['engage','launch','launch demo'].includes(command)){requestAirLaunch();return true;}
+    return false;
+  }
+  function listenAirCommand(){
+    const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!Recognition){setMessage('Voice input unavailable in this browser. Use the touchscreen buttons.',false);return;}
+    if(narrationBusy){setMessage('Wait for the voice announcement to finish, then tap Voice Command.',false);return;}
+    const recognition=new Recognition();recognition.lang='en-US';recognition.continuous=false;recognition.interimResults=false;
+    airVoiceButton.disabled=true;airVoiceButton.textContent='LISTENING…';
+    const timer=setTimeout(()=>recognition.abort(),10000);
+    recognition.onresult=event=>{if(!airCommand(event.results[0][0].transcript))setMessage('Command not recognized for this step. Use the touchscreen or try again.',false);};
+    recognition.onerror=()=>setMessage('Voice input unavailable. Use the touchscreen buttons.',false);
+    recognition.onend=()=>{clearTimeout(timer);airVoiceButton.disabled=false;airVoiceButton.textContent='USE VOICE COMMAND';};
+    try{recognition.start();}catch(_){recognition.onend();recognition.onerror();}
+  }
   expandedButton.addEventListener('click',()=>{prepareNarration();expandedDialog.showModal();expandedLabel='';});
   document.getElementById('closeTouchscreen').addEventListener('click',()=>expandedDialog.close());
   const manualButton=document.getElementById('manualPtzButton');
@@ -1236,6 +1272,10 @@
   function updateExpandedTouchscreen(now) {
     expandedButton.hidden=!seatedStates.includes(state) || state===STATES.LAUNCHING;
     expandedButton.classList.toggle('suggested-action',!expandedDialog.open && innerWidth<=900 && (eventClip.status==='READY' || observationPhase==='OBSERVING'));
+    document.getElementById('touchscreenFootnote').textContent=selectedScenario==='interception'?'Research visualization · launch only; no interception shown':'Vehicle touchscreen · command-center transmission is simulated';
+    const voiceStep=selectedScenario==='interception' && ['TRACKING','CONFIRM'].includes(air.phase);
+    airVoiceHint.hidden=!voiceStep;airVoiceButton.hidden=!voiceStep || !(window.SpeechRecognition||window.webkitSpeechRecognition);
+    airVoiceHint.textContent=airVoiceButton.hidden?'Voice input is unavailable in this browser. All actions work by touch.':'Optional browser speech service; may use online processing. Tap to speak '+(air.phase==='CONFIRM'?'“Confirm” or “Cancel”.':'“Follow”, “Launch” or “Dismiss”.');
     if(!expandedDialog.open)return;
     manualButton.hidden=state===STATES.VEHICLE_FIRST_PERSON || selectedScenario==='interception';
     manualButton.textContent=manualPtz?'AUTO PTZ':'MANUAL PTZ';
@@ -1246,7 +1286,7 @@
     const labels={RECORDED:'Clip recorded · observing person',READY:'Send the recorded clip to command center?',TRANSMITTING:'Transmitting clip… · Simulated transmission',SIMULATED_SEND:'✓ Clip transmitted to command center · '+eventClip.sentAt+' · Simulated transmission',KEPT_LOCAL:'Clip kept in this session. SAVE CLIP to retain it.',RECORDING:'Recording activity clip…',ERROR:'Clip recording failed.',UNAVAILABLE:'Video recording is unavailable in this browser.'};
     const buttons=touchscreenControls().filter(button=>!button.physicalOnly && !(manualPtz && ['VISIBLE','THERMAL','VIEW VISIBLE','VIEW THERMAL'].includes(button.label)));
     const label=buttons.map(b=>b.label).join('|');
-    document.getElementById('expandedStatus').textContent=Math.round(vehicleSpeed*3.6).toString()+' km/h · '+(observationPhase==='OBSERVING'?'Stopped · observing person. ':'')+(labels[eventClip.status]||el.message.textContent);
+    document.getElementById('expandedStatus').textContent=Math.round(vehicleSpeed*3.6).toString()+' km/h · '+(observationPhase==='OBSERVING'?'Stopped · observing person. ':'')+(selectedScenario==='interception'?airStatus()+' · '+el.message.textContent:(labels[eventClip.status]||el.message.textContent));
     if(label!==expandedLabel) {
       expandedLabel=label;
       const controls=document.getElementById('expandedControls');controls.replaceChildren();
@@ -1355,7 +1395,7 @@
     el.enter.disabled = false;
     el.enter.textContent = "START PATROL";
     document.getElementById("interceptionButton").disabled=false;
-    document.getElementById("interceptionButton").textContent="START INTERCEPTION";
+    document.getElementById("interceptionButton").textContent="START AIR CONTACT";
     if(sessionStorage.getItem("tactixReplay")==="interception"){sessionStorage.removeItem("tactixReplay");setTimeout(beginInterception,0);}
     characterController.vehicleCollision = true;
     characterController.cabinCollisionIgnored = false;
@@ -1576,7 +1616,7 @@
   async function beginInterception(){
     if(state!==STATES.READY)return;
     prepareNarration();window.TactixLaunchAudio?.prepare();
-    const button=document.getElementById('interceptionButton');button.disabled=true;el.enter.disabled=true;button.textContent='LOADING LAUNCH…';
+    const button=document.getElementById('interceptionButton');button.disabled=true;el.enter.disabled=true;button.textContent='LOADING AIR CONTACT…';
     try {
       if(!launchData){const response=await fetch('assets/animations/interceptor-launch.json?v=1');if(!response.ok)throw new Error('Launch motion unavailable');launchData=await response.json();}
       if(!launchFlight){
@@ -1593,19 +1633,94 @@
       vehicleSpeed=driverSpeedTarget=0;observationPhase='NONE';manualPtz=false;sensorVisible=true;sensorThermal=false;
       enterOperatorMode();setState(STATES.LAUNCH_READY);yaw=.35;pitch=-.13;
       if(!aerialContact){
-        aerialContact=new THREE.Group();aerialContact.name='UnconfirmedAerialContact';
-        const mat=new THREE.MeshStandardMaterial({color:0x32383c,roughness:.8});
-        const body=new THREE.Mesh(new THREE.BoxGeometry(.25,.13,.32),mat);aerialContact.add(body);
-        for(const angle of [-Math.PI/4,Math.PI/4]){const arm=new THREE.Mesh(new THREE.BoxGeometry(.9,.04,.04),mat);arm.rotation.y=angle;aerialContact.add(arm);}
-        for(const x of [-.3,.3])for(const z of [-.3,.3]){const rotor=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,.012,16),mat);rotor.position.set(x,.04,z);aerialContact.add(rotor);}
-        aerialContact.position.set(13,12,-35);scene.add(aerialContact);
+        const gltf=await new Promise((resolve,reject)=>new THREE.GLTFLoader().load('assets/models/air_contact_quadcopter.glb',resolve,undefined,reject));
+        aerialContact=gltf.scene;aerialContact.name='AirContact01';scene.add(aerialContact);
       }
-      aerialContact.visible=true;el.sentry.textContent='AERIAL CONTACT';
-      document.getElementById('missionLabel').textContent='INTERCEPTOR LAUNCH';
-      document.querySelector('.completion-card > p').textContent='TACTIXGLOBAL · INTERCEPTOR LAUNCH';
-      setMessage('Unconfirmed aerial contact. Vehicle parked. Review the live feed and authorize launch when ready.',false);
+      Object.assign(air,{phase:'PATROL',time:0,acquired:0,pan:0,tilt:0,fov:32,cueZ:vehicle.position.z-22,confirmed:false,history:[]});
+      aerialContact.position.set(96,20,vehicle.position.z-97);aerialContact.visible=true;
+      scanAngle=0;vehicleSpeed=0;driverSpeedTarget=PATROL_SPEED;setState(STATES.PATROL);
+      el.sentry.textContent='360° SCAN';
+      document.getElementById('missionLabel').textContent='AIR CONTACT / LAUNCH DEMO';
+      document.querySelector('.completion-card > p').textContent='TACTIXGLOBAL · AIR CONTACT';
+      setMessage('Air patrol active. Sentry One PTZ scanning.',true);
       updateSensorCamera();updateOperatorCamera(performance.now());
-    } catch(error){console.error(error);button.textContent='RETRY INTERCEPTION';button.disabled=false;el.enter.disabled=false;}
+    } catch(error){console.error(error);selectedScenario='patrol';setState(STATES.READY);el.startPanel.hidden=false;button.textContent='RETRY AIR CONTACT';button.disabled=false;el.enter.disabled=false;setMessage('Air scenario could not load. Please retry.',false);}
+  }
+  function airPhase(next) {
+    el.sentry.style.color=['ACQUIRING','TRACKING','CONFIRM'].includes(next)?'#efb94f':'';
+    air.phase=next;air.history.push({phase:next,time:air.time,vehicle:vehicle.position.toArray()});
+  }
+  function airStatus() {
+    if(air.phase==='PATROL')return '360° SCAN · INTERCEPTOR DOCKED';
+    if(air.phase==='DISMISSED')return 'CONTACT DISMISSED · SCAN RESUMED';
+    if(state===STATES.LAUNCHING || state===STATES.COMPLETE)return 'LAUNCH DEMONSTRATION · NO INTERCEPT EVENT';
+    const d=aerialContact.position.clone().sub(ptzOrigin());
+    const bearing=THREE.MathUtils.euclideanModulo(THREE.MathUtils.radToDeg(Math.atan2(d.x,-d.z)),360);
+    return `${Math.round(bearing)}° · ${Math.round(d.length())} m · ${Math.round(aerialContact.position.y)} m AGL · ${air.phase}`;
+  }
+  function requestAirLaunch() {
+    if(air.phase!=='TRACKING')return;
+    airPhase('CONFIRM');setMessage('Confirm interceptor launch demonstration.',true);
+  }
+  function confirmAirLaunch() {
+    if(air.phase!=='CONFIRM')return;
+    airPhase('BRAKING');driverSpeedTarget=0;
+    setMessage('Launch confirmed. Stopping vehicle before launch.',true);
+  }
+  function dismissAirContact() {
+    if(!['TRACKING','CONFIRM'].includes(air.phase))return;
+    airPhase('DISMISSED');scanAngle=air.pan;setState(STATES.DISMISSED);
+    setMessage('Contact dismissed by the operator. Sentry One PTZ has resumed its scan.',true);
+  }
+  function finishAirObservation() {
+    expandedDialog.close();narrationQueue.length=0;if(narrationSource)narrationSource.stop();
+    setState(STATES.COMPLETE);driverSpeedTarget=vehicleSpeed=0;
+    document.getElementById('completionTitle').textContent='Air-contact review complete';
+    const list=document.getElementById('completionSummary');list.replaceChildren();
+    for(const text of ['Air contact visually classified as quadcopter','Operator dismissed contact','Interceptor remained docked']){const li=document.createElement('li');li.textContent=text;list.appendChild(li);}
+    document.getElementById('viewRecordedClip').hidden=true;document.getElementById('completionPanel').hidden=false;
+  }
+  function updateAirContact(dt) {
+    if(!aerialContact || state===STATES.COMPLETE || state===STATES.READY)return;
+    air.time+=dt;
+    // A pre-existing aircraft flies a slow lateral survey arc; no target spawning or pursuit guidance.
+    aerialContact.position.x=96-28*Math.sin(air.time*.025);
+    aerialContact.position.y=20+.12*Math.sin(air.time*.9);
+    aerialContact.rotation.y=-Math.PI/2;
+    aerialContact.rotation.z=.025*Math.sin(air.time*.5);
+    contact.visible=false;
+    if(state!==STATES.LAUNCHING){
+      const previous=vehicleSpeed;
+      vehicleSpeed=THREE.MathUtils.clamp(driverSpeedTarget,Math.max(0,previous-1.1*dt),previous+1.4*dt);
+      const travel=(previous+vehicleSpeed)*.5*dt;vehicle.position.z-=travel;wheelTravel+=travel;
+      rollingWheels.forEach(({pivot,radius})=>pivot.rotation.x=-wheelTravel/radius);
+      el.speed.textContent=Math.round(vehicleSpeed*3.6)+' km/h';
+    }
+    if(air.phase==='PATROL' && vehicle.position.z<=air.cueZ){
+      airPhase('ACQUIRING');driverSpeedTarget=0;setState(STATES.CONTACT);el.sentry.textContent='AIR CONTACT · AMBER';
+      setMessage('Air contact detected, two o’clock. Sentry One PTZ slewing.',true);
+    }
+    const tracking=['ACQUIRING','TRACKING','CONFIRM','BRAKING','LAUNCHING'].includes(air.phase);
+    if(tracking){
+      const delta=aerialContact.position.clone().sub(ptzOrigin());
+      const pan=Math.atan2(delta.x,-delta.z),tilt=Math.atan2(delta.y,Math.hypot(delta.x,delta.z));
+      const error=Math.atan2(Math.sin(pan-air.pan),Math.cos(pan-air.pan));
+      air.pan+=THREE.MathUtils.clamp(error,-dt*.48,dt*.48);
+      air.tilt+=THREE.MathUtils.clamp(tilt-air.tilt,-dt*.3,dt*.3);
+      const aligned=Math.abs(error)<.012 && Math.abs(tilt-air.tilt)<.012;
+      air.fov=THREE.MathUtils.lerp(air.fov,aligned?.45:32,1-Math.exp(-dt*1.8));
+      if(air.phase==='ACQUIRING'){
+        air.acquired=aligned && air.fov<.7?air.acquired+dt:0;
+        if(air.acquired>1 && !narrationBusy){
+          air.confirmed=true;airPhase('TRACKING');setState(STATES.TRACKING);el.sentry.textContent='AIR CONTACT 01 · TRACK ACTIVE';
+          setMessage('Quadcopter confirmed. Tracking Air Contact One.',true);
+        }
+      }
+    }else{air.pan+=dt*SCAN_RATE;air.tilt=0;air.fov=32;}
+    if(air.phase==='BRAKING' && vehicleSpeed<.001 && !narrationBusy){
+      air.launchBearing=air.pan;airPhase('LAUNCHING');setState(STATES.LAUNCH_READY);authorizeLaunch();
+      speakNaturally('Interceptor launching.');
+    }
   }
   function launchPhase(){
     if(launchTime<2.55)return 'DOCKED';if(launchTime<4.6)return 'ROTOR START';if(launchTime<5)return 'LIFT FROM DOCK';if(launchTime<157/30)return 'CLEAR VEHICLE';if(launchTime<5.5)return 'STABILIZE';if(launchTime<6)return 'PITCH FOR TRAVEL';if(launchTime<7)return 'ACCELERATE AWAY';return 'CLIMB';
@@ -1627,11 +1742,14 @@
     const rf=Math.min(rotorTime*launchData.fps,launchData.samples.length-1),ri=Math.floor(rf);
     const ra=launchData.samples[ri],rb=launchData.samples[Math.min(ri+1,launchData.samples.length-1)];
     launchRotors.forEach((r,n)=>r.rotation.y=THREE.MathUtils.lerp(ra.rotors[n],rb.rotors[n],rf-ri));
+    const departureTurn=-air.launchBearing*THREE.MathUtils.smoothstep(launchTime,5.5,7);
+    launchFlight.position.applyAxisAngle(new THREE.Vector3(0,1,0),departureTurn);
+    launchFlight.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),departureTurn));
     launchFlight.updateMatrixWorld(true);
     const craft=launchFlight.getWorldPosition(new THREE.Vector3());
     const aim=vehicle.position.clone().add(new THREE.Vector3(0,1.8,0)).lerp(craft,THREE.MathUtils.smoothstep(launchTime,4.6,6.5));
     const desired=vehicle.position.clone().add(camera.aspect<1?new THREE.Vector3(8,5.5,11):new THREE.Vector3(5,3.8,7));
-    const blend=1-Math.exp(-dt*2);camera.position.lerp(desired,blend);camera.fov=THREE.MathUtils.lerp(camera.fov,camera.aspect<1?65:48,blend);camera.updateProjectionMatrix();camera.lookAt(aim);
+    const blend=1-Math.exp(-dt*2);camera.position.lerp(desired,blend);camera.fov=THREE.MathUtils.lerp(camera.fov,THREE.MathUtils.lerp(camera.aspect<1?65:48,camera.aspect<1?26:16,THREE.MathUtils.smoothstep(launchTime,6,8)),blend);camera.updateProjectionMatrix();camera.lookAt(aim);
     el.message.textContent=launchPhase().replaceAll('_',' ');el.sentry.textContent=launchPhase();
     if(launchTime>=launchData.duration+2){
       window.TactixLaunchAudio?.stop();
@@ -1757,6 +1875,8 @@
   });
 
   window.__tactixEntryDebug = {
+    airCommand,
+    airSnapshot(){return {phase:air.phase,time:air.time,confirmed:air.confirmed,history:air.history,pan:air.pan,tilt:air.tilt,fov:air.fov,target:aerialContact?.position.toArray(),vehicle:vehicle.position.toArray(),speed:vehicleSpeed,narrationBusy,buttons:touchscreenControls().map(b=>b.label),projection:aerialContact?.position.clone().project(sensorCamera).toArray()};},
     launchSnapshot(){return {scenario:selectedScenario,state,time:launchTime,phase:launchPhase(),count:launchCount,vehicle:vehicle.position.toArray(),flight:launchFlight?.position.toArray(),rotors:launchRotors.map(r=>r.rotation.y),scale:interceptorRig?.scale.toArray()};},
     patrolStep(dt, snapshot=true) {
       if(!debugEntry) return null;
@@ -1809,7 +1929,7 @@
       if(!roofHardware)return null;
       roofHardware.updateMatrixWorld(true);
       const box=o=>{const b=new THREE.Box3().setFromObject(o);return {min:b.min.toArray(),max:b.max.toArray(),size:b.getSize(new THREE.Vector3()).toArray()};};
-      return {ptz:box(ptzRig),interceptor:box(interceptorRig),pan:ptzPan.rotation.y,tilt:ptzTilt.rotation.x,opticalOrigin:ptzOrigin().toArray(),opticalDirection:new THREE.Vector3(0,0,-1).applyQuaternion(ptzOptical.getWorldQuaternion(new THREE.Quaternion())).toArray(),sensorDirection:sensorCamera.getWorldDirection(new THREE.Vector3()).toArray()};
+      return {ptzProjection:ptzOrigin().project(camera).toArray(),ptz:box(ptzRig),interceptor:box(interceptorRig),pan:ptzPan.rotation.y,tilt:ptzTilt.rotation.x,opticalOrigin:ptzOrigin().toArray(),opticalDirection:new THREE.Vector3(0,0,-1).applyQuaternion(ptzOptical.getWorldQuaternion(new THREE.Quaternion())).toArray(),sensorDirection:sensorCamera.getWorldDirection(new THREE.Vector3()).toArray()};
     },
     touchscreenView() {
       if(!debugEntry || !mountedTouchscreen)return null;
@@ -2197,30 +2317,43 @@
   function startPatrolFinale(){
     if(patrolFinaleTime!==null)return;
     patrolFinaleTime=0;vehicleSpeed=driverSpeedTarget=0;postSendObservation=false;expandedDialog.close();
-    exteriorView=true;exteriorManual=false;setState(STATES.PATROL_FINALE);
+    exteriorView=true;exteriorManual=false;manualPtz=false;setState(STATES.PATROL_FINALE);
     el.sentry.textContent='REVIEW COMPLETE';el.lookHint.hidden=true;
     updatePatrolFinale(0);
   }
   function updatePatrolFinale(dt){
-    // Brief fade hides the cabin-to-exterior cut, then a complete, unhurried orbit.
-    // Constant enclosing radius avoids camera pumping as the projected bounds change.
-    patrolFinaleTime=Math.min(12,patrolFinaleTime+dt);
+    // A low garden-side arc reveals the concealed person and the PTZ's sightline.
+    // Keep the road-side hedge behind the person rather than orbiting through it.
+    patrolFinaleTime=Math.min(16,patrolFinaleTime+dt);
     if(patrolFinaleTime<.35){el.entryFade.style.opacity=String(phaseEase(patrolFinaleTime/.35));return;}
     operator.visible=true;
-    const progress=phaseEase(THREE.MathUtils.clamp((patrolFinaleTime-.35)/10.5,0,1));
-    const angle=Math.PI/2+Math.PI*2*progress;
-    const bounds=new THREE.Box3();
-    for(const object of [vehicle,vegetation,contact])bounds.union(new THREE.Box3().setFromObject(object));
-    const sphere=bounds.getBoundingSphere(new THREE.Sphere()),focus=sphere.center;
-    camera.fov=55;camera.updateProjectionMatrix();
-    const half=THREE.MathUtils.degToRad(camera.fov/2);
-    const limitingHalf=Math.min(half,Math.atan(Math.tan(half)*camera.aspect));
-    const distance=Math.max(14,sphere.radius*1.15/Math.sin(limitingHalf));
-    // Elevated orbit clears nearby roofs and trees; the +X start/end is the open garden side.
-    const direction=new THREE.Vector3(Math.sin(angle),.8,Math.cos(angle)).normalize();
-    camera.position.copy(focus).addScaledVector(direction,distance);camera.lookAt(focus);
-    el.entryFade.style.opacity=String(patrolFinaleTime<.7?1-phaseEase((patrolFinaleTime-.35)/.35):phaseEase((patrolFinaleTime-11.5)/.5));
-    if(patrolFinaleTime>=12)completeScenario();
+    const progress=phaseEase(THREE.MathUtils.clamp((patrolFinaleTime-4.5)/10.5,0,1));
+    const person=contact.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,.85,0));
+    const focus=vehicle.localToWorld(new THREE.Vector3(0,1.25,0)).lerp(person,.5);
+    const portrait=camera.aspect<.9;
+    camera.fov=portrait?58:48;camera.updateProjectionMatrix();
+    const angle=portrait?THREE.MathUtils.lerp(-.58,-.34,progress):THREE.MathUtils.lerp(.14,.70,progress);
+    const direction=new THREE.Vector3(Math.cos(angle),.27,Math.sin(angle)).normalize();
+    const right=new THREE.Vector3(0,1,0).cross(direction).normalize();
+    const up=direction.clone().cross(right);
+    const half=THREE.MathUtils.degToRad(camera.fov/2),points=[];
+    for(const x of [-1.15,1.15])for(const y of [0,2.85])for(const z of [-2.8,2.8])points.push(vehicle.localToWorld(new THREE.Vector3(x,y,z)));
+    for(const x of [-.55,.55])for(const y of [-.85,.85])points.push(person.clone().add(new THREE.Vector3(x,y,0)));
+    let distance=6;
+    // Fit actual subjects, not the entire hedge's bounding sphere; a modest dolly-in
+    // still leaves margin for the vehicle, roof hardware and head/feet on phones.
+    const margin=THREE.MathUtils.lerp(1.24,1.13,progress);
+    for(const point of points){const d=point.sub(focus),depth=d.dot(direction);distance=Math.max(distance,depth+Math.abs(d.dot(right))*margin/(Math.tan(half)*camera.aspect),depth+Math.abs(d.dot(up))*margin/Math.tan(half));}
+    const overview=focus.clone().addScaledVector(direction,distance);
+    // Establish the optical head and its aim before revealing the full relationship.
+    // This point is above/outside the roof edge on the target-facing side.
+    const roofFocus=ptzOrigin();
+    const closePosition=roofFocus.clone().add(new THREE.Vector3(portrait?.95:1.05,.43,portrait?-.95:-1.05));
+    const reveal=phaseEase(THREE.MathUtils.clamp((patrolFinaleTime-2.85)/1.65,0,1));
+    camera.position.copy(closePosition).lerp(overview,reveal);
+    camera.lookAt(roofFocus.clone().lerp(focus,reveal));
+    el.entryFade.style.opacity=String(patrolFinaleTime<.7?1-phaseEase((patrolFinaleTime-.35)/.35):phaseEase((patrolFinaleTime-15.5)/.5));
+    if(patrolFinaleTime>=16)completeScenario();
   }
 
   function completeScenario() {
@@ -2254,6 +2387,7 @@
   document.getElementById('recordedClipDialog').addEventListener('close',()=>document.getElementById('recordedClipPlayer').pause());
 
   function updatePatrolVehicle(dt) {
+    if(selectedScenario==='interception'){updateAirContact(dt);return;}
     if(![STATES.PATROL,STATES.CONTACT,STATES.INSPECTING,STATES.TRACKING,STATES.DISMISSED].includes(state)) return;
     patrolElapsed+=dt;
     if(departureElapsed!==null){
@@ -2312,10 +2446,11 @@
   function ptzTarget() { return contact.position.clone().add(new THREE.Vector3(0,1.10,0)); }
 
   function ptzHolding() {
-    return !manualPtz && [STATES.TRACKING,STATES.CONTACT,STATES.INSPECTING].includes(state);
+    return !manualPtz && [STATES.TRACKING,STATES.CONTACT,STATES.INSPECTING,STATES.PATROL_FINALE].includes(state);
   }
 
   function updatePtzScan(dt) {
+    if(selectedScenario==='interception')return;
     if(![STATES.PATROL,STATES.CONTACT,STATES.INSPECTING,STATES.TRACKING,STATES.DISMISSED].includes(state)) return;
     if(!manualPtz && !ptzHolding()) { scanElapsed+=dt;scanAngle=(scanAngle+dt*SCAN_RATE)%(Math.PI*2); }
     if(state!==STATES.PATROL || contactTriggered || !npcLoaded || patrolElapsed<ENCOUNTER_DELAY) return;
@@ -2335,6 +2470,12 @@
   }
 
   function updateSensorCamera() {
+    if(selectedScenario==='interception' && aerialContact){
+      if(ptzPan && ptzTilt){ptzPan.rotation.y=-air.pan;ptzTilt.rotation.x=air.tilt;roofHardware.updateMatrixWorld(true);}
+      const origin=ptzOrigin();sensorCamera.position.copy(origin);sensorCamera.fov=air.fov;
+      sensorCamera.lookAt(origin.clone().add(new THREE.Vector3(Math.sin(air.pan)*Math.cos(air.tilt),Math.sin(air.tilt),-Math.cos(air.pan)*Math.cos(air.tilt))));
+      sensorCamera.updateProjectionMatrix();return;
+    }
     const target=selectedScenario==='interception' && aerialContact?aerialContact.position.clone():ptzHolding()?contact.position.clone().add(new THREE.Vector3(0,.78,0)):null;
     if(ptzPan && ptzTilt) {
       if(target) {
@@ -2452,7 +2593,7 @@
       // Consume actual frame time, including slower frames, in small motion steps.
       const steps=Math.max(1,Math.ceil(elapsed/(1/60)));
       for(let i=0;i<steps;i++) { updatePatrolVehicle(elapsed/steps);updatePtzScan(elapsed/steps); }
-      if([STATES.PATROL,STATES.CONTACT,STATES.INSPECTING,STATES.TRACKING].includes(state)) updateNpc(npcTime+elapsed);
+      if(selectedScenario==='patrol' && [STATES.PATROL,STATES.CONTACT,STATES.INSPECTING,STATES.TRACKING].includes(state)) updateNpc(npcTime+elapsed);
     }
     // Both cameras consume the final vehicle and skeleton transforms of this frame.
     scene.updateMatrixWorld(true);

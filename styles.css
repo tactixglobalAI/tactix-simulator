@@ -301,3 +301,7 @@ button.suggested-action:hover,button.suggested-action:focus-visible { outline:2p
 .scenario-cards p { flex:1; margin:0 0 16px; }
 .scenario-cards button { min-height:48px; width:100%; }
 @media(max-width:600px){ .scenario-cards { grid-template-columns:1fr; gap:10px; } .start-panel { padding:16px; } .scenario-cards article { padding:12px; } }
+
+#airVoiceButton { min-height:44px; margin-top:10px; }
+#airVoiceHint { display:block; margin-top:8px; line-height:1.5; color:#9db0c0; }
+#airVoiceHint[hidden] { display:none; }

@@ -15,3 +15,12 @@ This project contains mixed-license assets. No blanket open-source license or pu
 The owner authorized public deployment of the runtime simulator on 2026-09-26 and explicitly confirmed the hooded character permission after rechecking. This records the owner’s confirmation; it does not grant reuse rights to third parties. The authoring repository remains private.
 
 Model weights, Python environments, CUDA libraries, and Blender binaries are not redistributed. They are optional authoring dependencies; browser playback uses exported GLBs and MP3s only.
+
+## Air-contact quadcopter
+
+“Dji Mini 3 Pro” by aurumjuda747, licensed CC BY 4.0.
+Source: https://sketchfab.com/3d-models/dji-mini-3-pro-274f2ad2731e42b793b784c9f8453677
+Author: https://sketchfab.com/aurumjuda747
+License: https://creativecommons.org/licenses/by/4.0/
+Original supplied GLB retained in assets/source/air-contact (authoring repository only).
+Modified for this simulator: joined static meshes, decimated geometry, resized textures, centered origin. Actual source dimensions preserved. Runtime asset: assets/models/air_contact_quadcopter.glb. Product shape does not establish manufacturer classification in the scenario.
