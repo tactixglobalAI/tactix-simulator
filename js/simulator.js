@@ -815,14 +815,7 @@
       const pole = target.clone().addScaledVector(direction,.55);pole.y+=.45;
       footContact(side,target,pole,contactWeight);
     });
-    // Add restrained reciprocal swing over the imported close-to-body walk pose.
-    const swing=Math.sin(u*cycles*Math.PI*2)*.24*contactWeight;
-    for(const [side,sign] of [['left',1],['right',-1]]){
-      const arm=rigBones[side+'UpperArm'];if(!arm)continue;
-      const worldTurn=new THREE.Quaternion().setFromAxisAngle(lateral,swing*sign);
-      const desired=worldTurn.multiply(arm.getWorldQuaternion(new THREE.Quaternion()));
-      arm.quaternion.copy(arm.parent.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(desired));arm.updateMatrixWorld(true);
-    }
+
   }
 
   function addTargetMarker(target, color) {
@@ -2111,6 +2104,13 @@
     document.getElementById('replayScenario').focus();
   }
   document.getElementById('replayScenario').addEventListener('click',()=>location.reload());
+  document.getElementById('exitScenario').addEventListener('click',async()=>{
+    // Return to the start screen and leave immersive mode; never try to close a user-owned tab.
+    if(document.fullscreenElement) {
+      try { await document.exitFullscreen(); } catch (_) { /* Navigation still exits the scenario. */ }
+    }
+    location.reload();
+  });
   document.getElementById('viewRecordedClip').addEventListener('click',()=>{
     if(!eventClip.url)return;
     const player=document.getElementById('recordedClipPlayer');player.src=eventClip.url;
