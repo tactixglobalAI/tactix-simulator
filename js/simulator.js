@@ -158,6 +158,7 @@
   let wheelTravel=0;
   let driverSpeedTarget=5;
   let officerSlowAt=null,officerSlowPending=false;
+  let observationPlan=null;
   let personObservationTime=0, automaticPatrolAt=null, driverSightClear=false, nextSightCheck=0, postSendObservation=false, approachTracking=false;
   let clipMonitorAttention=false, clipReturnTimer=null;
   let observationPhase="NONE", resumeLookTime=0, manualLookUntil=0, screenAttention=false;
@@ -1470,7 +1471,8 @@
     el.sensorMode.textContent = 'THERMAL';
     document.querySelector('.track-panel').hidden = false;
     el.trackState.textContent = 'AUTO TRACK · UNCONFIRMED';
-    officerSlowPending=true;officerSlowAt=patrolElapsed+7.25;
+    observationPlan=planObservationStop();
+    approachTracking=false;nextSightCheck=0;officerSlowPending=true;officerSlowAt=patrolElapsed+7.25;
     startEventRecording();
     alertTone();
     const localContact=vehicle.worldToLocal(contact.getWorldPosition(new THREE.Vector3()));
@@ -1531,7 +1533,7 @@
   el.enter.addEventListener("click", beginIntro);
   function beginPatrol() {
     if (state !== STATES.VEHICLE_FIRST_PERSON && state !== STATES.DISMISSED) return;
-    driverSpeedTarget=PATROL_SPEED;officerSlowPending=false;officerSlowAt=null;observationPhase="NONE";
+    driverSpeedTarget=PATROL_SPEED;officerSlowPending=false;officerSlowAt=null;observationPhase="NONE";observationPlan=null;
     patrolStartedAt = performance.now();
     contactTriggered = false;
     updateNpc(0);
@@ -1646,11 +1648,30 @@
       updateNpc(npcTime+dt);updatePtzScan(dt);updateSensorCamera();updateOperatorCamera(0);
       return snapshot ? this.npcSnapshot() : state;
     },
+    planningProbe(x,z,speed) {
+      if(!debugEntry)return null;
+      const oldContact=contact.position.clone(),oldVegetation=vegetation.position.clone(),oldSpeed=vehicleSpeed;
+      try {
+        const delta=new THREE.Vector3(x,contact.position.y,z).sub(contact.position);
+        contact.position.add(delta);vegetation.position.add(delta);vehicleSpeed=speed;
+        const p=planObservationStop();return {stop:p.stop.toArray(),ahead:p.ahead,bearing:p.bearing,visibleSamples:p.visibleSamples,brakingDistance:p.brakingDistance,fallback:p.fallback};
+      } finally {contact.position.copy(oldContact);vegetation.position.copy(oldVegetation);vehicleSpeed=oldSpeed;contact.updateMatrixWorld(true);vegetation.updateMatrixWorld(true);}
+    },
+    observationProbe(ahead) {
+      if(!debugEntry)return null;
+      toggleDebugPause(true);debugCameraView=null;vehicle.position.z=contact.position.z+ahead;
+      vehicleSpeed=0;observationPhase='OBSERVING';clipMonitorAttention=false;nextSightCheck=0;
+      vehicle.updateMatrixWorld(true);updateNpc(0);contact.visible=true;
+      for(let i=0;i<300;i++)updateDriverAttention(1/60);
+      updateOperatorCamera(0);
+      const eye=operatorEye.getWorldPosition(new THREE.Vector3()),delta=contact.position.clone().sub(eye);
+      return {eye:eye.toArray(),person:contact.position.toArray(),ahead:eye.z-contact.position.z,bearing:Math.atan2(delta.x,-delta.z)*180/Math.PI,clear:personSightlineClear(),yaw};
+    },
     displaySnapshot() {
       const pixels=new Uint8Array(4);renderer.readRenderTargetPixels(touchscreenUI.target,650,34,1,1,pixels);
       return {pixelRatio:renderer.getPixelRatio(),buttonPixel:Array.from(pixels),screenSize:[touchscreenUI.target.width,touchscreenUI.target.height]};
     },
-    speedometerSnapshot() {return {observationPhase,approachTracking,postSendObservation,driverSightClear,personObservationTime,clipMonitorAttention,yaw,pitch,value:originalSpeedometer?.last,extraDisplayVisible:cockpit?.getObjectByName("InstrumentClusterSurface")?.visible,officerSlowPending,officerSlowAt};},
+    speedometerSnapshot() {return {observationPhase,plan:observationPlan?{stop:observationPlan.stop.toArray(),ahead:observationPlan.ahead,bearing:observationPlan.bearing,visibleSamples:observationPlan.visibleSamples,brakingDistance:observationPlan.brakingDistance,fallback:observationPlan.fallback}:null,approachTracking,postSendObservation,driverSightClear,personObservationTime,clipMonitorAttention,yaw,pitch,value:originalSpeedometer?.last,extraDisplayVisible:cockpit?.getObjectByName("InstrumentClusterSurface")?.visible,officerSlowPending,officerSlowAt};},
     eventSnapshot() {return {status:eventClip.status,sentAt:eventClip.sentAt,sendStarted:eventClip.sendStarted,bytes:eventClip.blob?.size||0,url:eventClip.url,frames:eventClip.frames,error:eventClip.error,driverSpeedTarget,vehicleSpeed};},
     driverSpeed(speed) {if(debugEntry && [0,OBSERVATION_SPEED,PATROL_SPEED].includes(speed))setDriverSpeed(speed);},
     clipChoice(choice) {if(!debugEntry)return;if(choice==='SEND')simulateClipSend();if(choice==='KEEP')keepClipLocal();},
@@ -1937,7 +1958,7 @@
       const offset=touchscreenSurface.getWorldPosition(new THREE.Vector3()).sub(operatorEye.getWorldPosition(new THREE.Vector3()));
       targetYaw=Math.atan2(-offset.x,-offset.z);
       targetPitch=Math.atan2(offset.y,Math.hypot(offset.x,offset.z));
-    } else if(observationPhase==='OBSERVING' || (observationPhase==='STOPPING' && approachTracking)) {
+    } else if(observationPhase==='OBSERVING' || ((observationPhase==='STOPPING' || officerSlowPending) && approachTracking)) {
       const offset=contact.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,.95,0)).sub(operatorEye.getWorldPosition(new THREE.Vector3()));
       targetYaw=Math.atan2(-offset.x,-offset.z);
       targetPitch=Math.atan2(offset.y,Math.hypot(offset.x,offset.z));
@@ -1950,6 +1971,50 @@
     pitch+=THREE.MathUtils.clamp((targetPitch-pitch)*step,-dt*.45,dt*.45);
   }
 
+  function opaqueSightline(eye,target) {
+    const delta=target.clone().sub(eye);
+    const ray=new THREE.Raycaster(eye,delta.clone().normalize(),.02,Math.max(.02,delta.length()-.1));
+    return !ray.intersectObjects([cockpit,vegetation],true).some(hit=>{
+      for(let node=hit.object;node;node=node.parent)if(!node.visible)return false;
+      const material=Array.isArray(hit.object.material)?hit.object.material[hit.face.materialIndex]:hit.object.material;
+      return material && !(material.transparent && material.opacity<.5);
+    });
+  }
+
+  function planObservationStop() {
+    // Plan only after sensor acquisition, along the current straight patrol route.
+    vehicle.updateMatrixWorld(true);contact.updateMatrixWorld(true);vegetation.updateMatrixWorld(true);
+    const start=vehicle.position.clone(),eye=operatorEye.getWorldPosition(new THREE.Vector3());
+    const forward=new THREE.Vector3(0,0,-1).applyQuaternion(vehicle.quaternion);
+    const right=new THREE.Vector3(1,0,0).applyQuaternion(vehicle.quaternion);
+    const target=contact.getWorldPosition(new THREE.Vector3());
+    const offset=target.clone().sub(eye),ahead=offset.dot(forward),lateral=Math.abs(offset.dot(right));
+    const bounds=new THREE.Box3().setFromObject(cockpit);
+    const frontClearance=Math.max(.5,eye.z-bounds.min.z+.5);
+    const brakingDistance=vehicleSpeed*vehicleSpeed/(2*1.1)+vehicleSpeed*.3;
+    let best=null;
+    try {
+      for(const degrees of [45,50,55,60,40,35,30,25,20]) {
+        const gap=Math.max(frontClearance,lateral/Math.tan(THREE.MathUtils.degToRad(degrees)));
+        const travel=ahead-gap;
+        if(travel<brakingDistance || gap<=0)continue;
+        vehicle.position.copy(start).addScaledVector(forward,travel);vehicle.updateMatrixWorld(true);
+        const candidateEye=operatorEye.getWorldPosition(new THREE.Vector3());
+        const samples=[new THREE.Vector3(0,1.25,0),new THREE.Vector3(-.12,1.1,0),new THREE.Vector3(.12,1.1,0)];
+        const visibleSamples=samples.filter(p=>opaqueSightline(candidateEye,target.clone().add(p))).length;
+        if(visibleSamples<2)continue;
+        const score=Math.abs(degrees-50)+(3-visibleSamples)*12;
+        if(!best || score<best.score)best={stop:vehicle.position.clone(),forward:forward.clone(),target:target.clone(),ahead:gap,bearing:degrees,visibleSamples,brakingDistance,score,fallback:false};
+      }
+    } finally {vehicle.position.copy(start);vehicle.updateMatrixWorld(true);}
+    // No clear reachable view: brake on the existing route, without chasing past the contact.
+    return best || {stop:start.clone().addScaledVector(forward,brakingDistance),forward,target,ahead:ahead-brakingDistance,bearing:null,visibleSamples:0,brakingDistance,fallback:true};
+  }
+
+  function remainingObservationDistance() {
+    return observationPlan?Math.max(0,observationPlan.stop.clone().sub(vehicle.position).dot(observationPlan.forward)):0;
+  }
+
   function personSightlineClear() {
     if(!operatorEye || !cockpit)return false;
     if(patrolElapsed>=nextSightCheck) {
@@ -1957,12 +2022,7 @@
       vehicle.updateMatrixWorld(true);vegetation.updateMatrixWorld(true);
       const eye=operatorEye.getWorldPosition(new THREE.Vector3());
       const delta=contact.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,1.25,0)).sub(eye);
-      const ray=new THREE.Raycaster(eye,delta.clone().normalize(),.02,delta.length()-.1);
-      driverSightClear=!ray.intersectObjects([cockpit,vegetation],true).some(hit=>{
-        for(let node=hit.object;node;node=node.parent)if(!node.visible)return false;
-        const material=Array.isArray(hit.object.material)?hit.object.material[hit.face.materialIndex]:hit.object.material;
-        return material && !(material.transparent && material.opacity<.5);
-      });
+      driverSightClear=opaqueSightline(eye,eye.clone().add(delta));
     }
     return driverSightClear;
   }
@@ -1979,8 +2039,9 @@
     if(![STATES.PATROL,STATES.CONTACT,STATES.INSPECTING,STATES.TRACKING,STATES.DISMISSED].includes(state)) return;
     patrolElapsed+=dt;
     contact.visible=patrolElapsed>=ENCOUNTER_DELAY;
+    if(observationPlan && (officerSlowPending || observationPhase==='STOPPING') && contact.position.distanceTo(observationPlan.target)>.5)observationPlan=planObservationStop();
     if(officerSlowPending && patrolElapsed>=officerSlowAt) {
-      officerSlowPending=false;officerSlowAt=null;driverSpeedTarget=OBSERVATION_SPEED;observationPhase="STOPPING";approachTracking=false;nextSightCheck=0;
+      officerSlowPending=false;officerSlowAt=null;driverSpeedTarget=OBSERVATION_SPEED;observationPhase="STOPPING";nextSightCheck=0;
       setMessage('Officer slowing to a stop to observe the person.',false);
     }
     if(observationPhase==='STOPPING' && vehicleSpeed<.01) {
@@ -1989,9 +2050,15 @@
     }
     if(observationPhase==='RESUMING') {
       resumeLookTime+=dt;
-      if(resumeLookTime>=1.5 && Math.abs(yaw-.22)<.04){observationPhase='NONE';driverSpeedTarget=PATROL_SPEED;}
+      if(resumeLookTime>=1.5 && Math.abs(yaw-.22)<.04){
+        observationPhase='NONE';driverSpeedTarget=PATROL_SPEED;
+        manualPtz=false;scanAngle=THREE.MathUtils.euclideanModulo(-(ptzPan?.rotation.y||0),Math.PI*2);
+        setState(STATES.PATROL);el.sentry.textContent='360° SCAN';el.trackState.textContent='OBSERVATION COMPLETE';
+        sensorVisible=true;el.sensorTarget.textContent='360° SCAN';
+        setMessage('Patrol resumed. Sentry One PTZ scanning. Recorded clip retained.',false);
+      }
     }
-    if(observationPhase==='STOPPING' && !approachTracking && vehicleSpeed<=2 && vehicle.position.z-(contact.position.z+1.5)<=8 && personSightlineClear())approachTracking=true;
+    if((observationPhase==='STOPPING' || officerSlowPending) && !approachTracking && vehicleSpeed<=2 && remainingObservationDistance()<=Math.max(3,vehicleSpeed*4) && personSightlineClear())approachTracking=true;
     updateDriverAttention(dt);
     if(observationPhase==='OBSERVING' && !exteriorView && !expandedDialog.open && !clipMonitorAttention && settledPersonSightline())personObservationTime+=dt;
     if(postSendObservation && personObservationTime>=5)proceedPatrol();
@@ -1999,12 +2066,13 @@
       eventClip.status='READY';clipMonitorAttention=observationPhase==='OBSERVING';manualLookUntil=0;
       setMessage('Activity clip recorded. Send the clip to the command center?',true);
     }
-    const remaining=Math.max(0,vehicle.position.z-(contact.position.z+1.5));
-    const targetSpeed=observationPhase==='STOPPING'?Math.min(OBSERVATION_SPEED,Math.sqrt(2*1.1*remaining)):driverSpeedTarget;
+    const remaining=remainingObservationDistance();
+    const brakingForContact=officerSlowPending || observationPhase==='STOPPING';
+    const targetSpeed=brakingForContact?Math.min(observationPhase==='STOPPING'?OBSERVATION_SPEED:driverSpeedTarget,Math.sqrt(2*1.1*remaining)):driverSpeedTarget;
     const previousSpeed=vehicleSpeed;
     vehicleSpeed=THREE.MathUtils.clamp(targetSpeed,Math.max(0,vehicleSpeed-1.1*dt),vehicleSpeed+1.4*dt);
     let travel=(previousSpeed+vehicleSpeed)*.5*dt;
-    if(observationPhase==='STOPPING' && travel>=remaining){travel=remaining;vehicleSpeed=0;}
+    if(brakingForContact && travel>=remaining){travel=remaining;vehicleSpeed=0;}
     vehicle.position.z-=travel;
     wheelTravel+=travel;
     rollingWheels.forEach(({pivot,radius})=>{pivot.rotation.x=-wheelTravel/radius;});
