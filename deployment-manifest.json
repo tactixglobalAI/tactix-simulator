@@ -1,0 +1,29 @@
+{
+  "files": {
+    "THIRD_PARTY_NOTICES.md": "a2255032c9259abd10c585b386952f0ac41240dc8be0d3612a7f797f63f51c2d",
+    "assets/audio/narration/KOKORO-LICENSE.txt": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "assets/audio/narration/README.md": "7d99e6f606660fe9adf2cb2c2486c0b040e62b21b1a3cd4a2e28b0cd2c3c0a00",
+    "assets/audio/narration/clip_ready.mp3": "e40f839d5ed2e33fce21ee3c7d3b464bb6c0664af627521108208164a941caca",
+    "assets/audio/narration/clip_sent.mp3": "8a8b9b5852fd2112427b12523fdc9e79b599f1083086fce42553993223c5cd73",
+    "assets/audio/narration/contact.mp3": "510ae13836f8aa5f7340fcfbaa67fcd30ad446425f8e90e6bbc7e57b1481d6cd",
+    "assets/audio/narration/dismissed.mp3": "a440fbb4b461770c97dd807c0f4414cf3b516f9dbc6c03e437837510cb4065d1",
+    "assets/audio/narration/manifest.json": "92a60e0675cf3d6ab810b3cd397b19f784c9677b00b81d5af92a94c0903cee3f",
+    "assets/audio/narration/patrol.mp3": "01a2858022c5fc236df87b54f4fff9ef5d39bc36a828de24ab6ee1ba726b89e8",
+    "assets/audio/narration/seated.mp3": "02d980e332afc408f9a466c6c6c6eed303f4e953143bda9a5e9d2d0c53940b76",
+    "assets/audio/narration/thermal.mp3": "875a577f23dead0d41da09b77789013587e053096c8c626b431b19e40678d78f",
+    "assets/audio/narration/tracking.mp3": "7aa291c1702be2581a86c8678a843c1850902afe38bec03b6b63f2018882727c",
+    "assets/models/bolero_camper_simulator.glb": "2fb2d75ce40ec1304cf16e3dedce80d4457ef31493bf29c407d29ae7ee330af8",
+    "assets/models/hooded_npc.glb": "d5638dd6cf26feeb07b5535c617fc372d13074c07a32e49148fac6eff73d1e30",
+    "assets/models/interceptor_docked.glb": "14a95c96ed5c848d53047c587d17ff86d5c6cfb797e526aa8bcdd1bd859c6631",
+    "assets/models/ptz_roof.glb": "8a4e52ab898b81c77bd6840c386259fc4ff72393fcd91bffe4f56f85da42626b",
+    "assets/models/ptz_touchscreen_clean.glb": "05015947c6deaeddd070fd033f69c30dbb24e588428a65f66846f5145d1b03d3",
+    "assets/models/roof_platform.glb": "57ee7579da03712dfb555a1844bfb9dec597568a3512b0d6e768450009f55d03",
+    "assets/models/tactical_officer_rigged.glb": "81df701be03d02b3a65518bac853fa503019017cb09d6b14b69760f974d28484",
+    "index.html": "5396f1c408a81e020e59ba3234e16b4a361c04c25a6813710fdb4ec840922a4a",
+    "js/simulator.js": "46d625a6acfde6cbfac7b5713a7acac353b6096bac92c4a6b379857cdea32f08",
+    "styles.css": "a1a57b5de10d29c465587db13e9a3b00b51798ccb89e8ad1b6776f791014c660",
+    "vendor/three-0.128.0/GLTFLoader.js": "5c15967ba830918a9caea6338712c994c354bccd4edc4569bde411c3ec06a3e6",
+    "vendor/three-0.128.0/LICENSE": "7dddf7c5b8fd10ee654db8857d75d104b5557889aa5a91fc4ca545ea7c07062f",
+    "vendor/three-0.128.0/three.min.js": "9274bbcec8d96168626c732b5d31c775aa8cfb7eaa0599bec0c175908a2c1ce2"
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "engine": "Kokoro 0.9.4",
+  "model": "hexgrad/Kokoro-82M",
+  "revision": "f3ff3571791e39611d31c381e3a41a3af07b4987",
+  "voice": "bf_emma",
+  "speed": 1.0,
+  "sample_rate": 24000,
+  "clips": {
+    "Operator seated. Start patrol when ready.": {
+      "file": "assets/audio/narration/seated.mp3?v=02d980e332af",
+      "spoken_text": "You’re in. Start the patrol when you’re ready.",
+      "seconds": 2.95,
+      "sha256": "02d980e332afc408f9a466c6c6c6eed303f4e953143bda9a5e9d2d0c53940b76"
+    },
+    "Night patrol active. Sentry One PTZ is scanning in visible and thermal bands.": {
+      "file": "assets/audio/narration/patrol.mp3?v=01a2858022c5",
+      "spoken_text": "Night patrol is active. Sentry One P T Z is scanning in visible and thermal bands.",
+      "seconds": 6.05,
+      "sha256": "01a2858022c5fc236df87b54f4fff9ef5d39bc36a828de24ab6ee1ba726b89e8"
+    },
+    "Sentry One PTZ detected a person ahead on the right. Auto-tracking and recording. Slow down. Crouching behind vegetation, intent unconfirmed.": {
+      "file": "assets/audio/narration/contact.mp3?v=510ae13836f8",
+      "spoken_text": "Sentry One P T Z. Person detected ahead right. Tracking and recording. Slow down.",
+      "seconds": 8.75,
+      "sha256": "510ae13836f8aa5f7340fcfbaa67fcd30ad446425f8e90e6bbc7e57b1481d6cd"
+    },
+    "Sentry One PTZ. Clip transmitted successfully to command center.": {
+      "file": "assets/audio/narration/clip_sent.mp3?v=8a8b9b5852fd",
+      "spoken_text": "Sentry One P T Z. Clip transmitted successfully to command centre.",
+      "seconds": 5.125,
+      "sha256": "8a8b9b5852fd2112427b12523fdc9e79b599f1083086fce42553993223c5cd73"
+    },
+    "Activity clip recorded. Send the clip to the command center?": {
+      "file": "assets/audio/narration/clip_ready.mp3?v=e40f839d5ed2",
+      "spoken_text": "The activity clip has been recorded. Would you like to send it to the command centre?",
+      "seconds": 5.425,
+      "sha256": "e40f839d5ed2e33fce21ee3c7d3b464bb6c0664af627521108208164a941caca"
+    },
+    "Sentry One PTZ thermal is now displayed on the center console. Classification remains provisional.": {
+      "file": "assets/audio/narration/thermal.mp3?v=875a577f23de",
+      "spoken_text": "The Sentry One P T Z thermal feed is on the centre console. The classification is still provisional.",
+      "seconds": 6.8,
+      "sha256": "875a577f23dead0d41da09b77789013587e053096c8c626b431b19e40678d78f"
+    },
+    "Tracking is active on the center console. No hostile action has been inferred.": {
+      "file": "assets/audio/narration/tracking.mp3?v=7aa291c1702b",
+      "spoken_text": "Tracking is active. We haven’t identified any hostile action.",
+      "seconds": 4.55,
+      "sha256": "7aa291c1702be2581a86c8678a843c1850902afe38bec03b6b63f2018882727c"
+    },
+    "Contact dismissed by the operator. Sentry One PTZ has resumed its scan.": {
+      "file": "assets/audio/narration/dismissed.mp3?v=a440fbb4b461",
+      "spoken_text": "Contact dismissed. Sentry One P T Z is scanning again.",
+      "seconds": 4.525,
+      "sha256": "a440fbb4b461770c97dd807c0f4414cf3b516f9dbc6c03e437837510cb4065d1"
+    }
+  }
+}
