@@ -1116,7 +1116,7 @@
       ui.texture.needsUpdate=true;
     }
     ui.feed.visible=sensorVisible;
-    renderer.setRenderTarget(ui.target);renderer.setViewport(0,0,720,480);renderer.render(ui.scene,ui.camera);renderer.setRenderTarget(null);
+    renderer.setRenderTarget(ui.target);renderer.render(ui.scene,ui.camera);renderer.setRenderTarget(null);
   }
 
   const expandedDialog=document.getElementById('touchscreenDialog');
@@ -1133,7 +1133,7 @@
     if(!expandedDialog.open)return;
     const labels={READY:'Send the recorded clip to command center?',TRANSMITTING:'Transmitting clip… · Simulated transmission',SIMULATED_SEND:'✓ Clip transmitted to command center · '+eventClip.sentAt+' · Simulated transmission',KEPT_LOCAL:'Clip kept in this session. SAVE CLIP to retain it.',RECORDING:'Recording activity clip…',ERROR:'Clip recording failed.',UNAVAILABLE:'Video recording is unavailable in this browser.'};
     const buttons=touchscreenControls();
-    const label=[state,eventClip.status,driverSpeedTarget,buttons.map(b=>b.label).join('|')].join('|');
+    const label=buttons.map(b=>b.label).join('|');
     document.getElementById('expandedStatus').textContent=Math.round(vehicleSpeed*3.6).toString()+' km/h · '+(labels[eventClip.status]||el.message.textContent);
     if(label!==expandedLabel) {
       expandedLabel=label;
@@ -1164,7 +1164,10 @@
     const hit=ray.intersectObject(touchscreenSurface)[0];if(!hit?.uv)return false;
     const x=hit.uv.x*720,y=hit.uv.y*480;
     const button=touchscreenControls().find(b=>x>=b.x && x<=b.x+b.w && y>=(b.y??400) && y<=(b.y??400)+(b.h??72));
-    if(!button)return false;
+    if(!button) {
+      if(event.pointerType==='touch') {prepareNarration();expandedDialog.showModal();expandedLabel='';return true;}
+      return false;
+    }
     prepareNarration();button.action();return true;
   }
 
@@ -1473,28 +1476,35 @@
     updateOperatorCamera(performance.now());
   });
 
+  let pointerStart=null,pointerDragged=false,activePointerId=null;
   el.canvas.addEventListener("pointerdown", event => {
-    if (![STATES.VEHICLE_FIRST_PERSON, STATES.PATROL, STATES.CONTACT, STATES.INSPECTING, STATES.TRACKING, STATES.DISMISSED].includes(state)) return;
-    if(!exteriorView && pressTouchscreen(event)) {event.preventDefault();return;}
-    pointerDown = true;
-    lastPointer = { x: event.clientX, y: event.clientY };
+    if(!seatedStates.includes(state) || !event.isPrimary || event.button!==0)return;
+    pointerDown=true;pointerDragged=false;activePointerId=event.pointerId;
+    pointerStart={x:event.clientX,y:event.clientY};lastPointer={...pointerStart};
     el.canvas.setPointerCapture(event.pointerId);
   });
   el.canvas.addEventListener("pointermove", event => {
-    if (!pointerDown) return;
-    const dx = event.clientX - lastPointer.x;
-    const dy = event.clientY - lastPointer.y;
+    if(!pointerDown || event.pointerId!==activePointerId)return;
+    if(!pointerDragged && Math.hypot(event.clientX-pointerStart.x,event.clientY-pointerStart.y)<10)return;
+    pointerDragged=true;
+    const dx=event.clientX-lastPointer.x,dy=event.clientY-lastPointer.y;
     if(exteriorView) {
       exteriorYaw-=dx*.005;
       exteriorElevation=THREE.MathUtils.clamp(exteriorElevation+dy*.004,.20,.85);
     } else {
-      yaw = THREE.MathUtils.clamp(yaw - dx * 0.0032, -1.35, 1.35);
-      pitch = THREE.MathUtils.clamp(pitch - dy * 0.0027, -0.55, 0.48);
+      yaw=THREE.MathUtils.clamp(yaw-dx*.0032,-1.35,1.35);
+      pitch=THREE.MathUtils.clamp(pitch-dy*.0027,-.55,.48);
     }
-    lastPointer = { x: event.clientX, y: event.clientY };
+    lastPointer={x:event.clientX,y:event.clientY};
   });
-  window.addEventListener("pointerup", () => { pointerDown = false; });
-  el.canvas.addEventListener("pointercancel", () => { pointerDown = false; });
+  el.canvas.addEventListener("pointerup", event => {
+    if(!pointerDown || event.pointerId!==activePointerId)return;
+    const tap=!pointerDragged && Math.hypot(event.clientX-pointerStart.x,event.clientY-pointerStart.y)<10;
+    pointerDown=false;activePointerId=null;
+    if(tap && !exteriorView)pressTouchscreen(event);
+  });
+  el.canvas.addEventListener("pointercancel",()=>{pointerDown=false;activePointerId=null;});
+  el.canvas.addEventListener("lostpointercapture",()=>{pointerDown=false;activePointerId=null;});
   function toggleDebugPause(force) {
     const next = typeof force === "boolean" ? force : !debugPaused;
     if (next === debugPaused) return;
@@ -1549,6 +1559,10 @@
       updatePatrolVehicle(dt);
       updateNpc(npcTime+dt);updatePtzScan(dt);updateSensorCamera();updateOperatorCamera(0);
       return snapshot ? this.npcSnapshot() : state;
+    },
+    displaySnapshot() {
+      const pixels=new Uint8Array(4);renderer.readRenderTargetPixels(touchscreenUI.target,650,34,1,1,pixels);
+      return {pixelRatio:renderer.getPixelRatio(),buttonPixel:Array.from(pixels),screenSize:[touchscreenUI.target.width,touchscreenUI.target.height]};
     },
     speedometerSnapshot() {return {value:originalSpeedometer?.last,extraDisplayVisible:cockpit?.getObjectByName("InstrumentClusterSurface")?.visible,officerSlowPending,officerSlowAt};},
     eventSnapshot() {return {status:eventClip.status,sentAt:eventClip.sentAt,sendStarted:eventClip.sendStarted,bytes:eventClip.blob?.size||0,url:eventClip.url,frames:eventClip.frames,error:eventClip.error,driverSpeedTarget,vehicleSpeed};},
@@ -1900,6 +1914,23 @@
     camera.updateProjectionMatrix();
   }
   window.addEventListener("resize", resize);
+  window.visualViewport?.addEventListener('resize',resize);
+  new ResizeObserver(resize).observe(el.stage);
+  const fullscreenButton=document.getElementById('fullscreenButton');
+  fullscreenButton.addEventListener('click',async()=>{
+    try {
+      if(document.fullscreenElement)await document.exitFullscreen();
+      else if(document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen({navigationUI:'hide'});
+      else throw new Error('Fullscreen unavailable');
+    } catch(_) {
+      const hint=document.getElementById('fullscreenHint');
+      hint.textContent='Fullscreen is unavailable in this browser. Try Add to Home screen from the browser menu.';
+      hint.hidden=false;setTimeout(()=>{hint.hidden=true;},7000);
+    }
+  });
+  document.addEventListener('fullscreenchange',()=>{
+    fullscreenButton.textContent=document.fullscreenElement?'EXIT FULLSCREEN':'FULLSCREEN';resize();
+  });
   resize();
 
   function renderSensorView(inset = false) {
@@ -1931,7 +1962,6 @@
     }
     if(!inset) {
       renderer.setRenderTarget(sensorTarget);
-      renderer.setViewport(0,0,512,288);
       renderer.render(scene,sensorCamera);
       captureEventFrame();
       renderer.setRenderTarget(null);

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>TactixGlobal · Operator Simulator</title>
-  <link rel="stylesheet" href="styles.css?v=patrol-speed-18">
+  <link rel="stylesheet" href="styles.css?v=mobile-display-2">
 </head>
 <body>
   <header class="topbar">
@@ -13,12 +13,14 @@
       <span class="product">OPERATOR SIMULATOR</span>
     </div>
     <nav>
+      <button id="fullscreenButton" type="button">FULLSCREEN</button>
       <a href="https://tactixglobalai.github.io/tactixglobal-skywatch/">HOW IT WORKS</a>
       <a class="active" href="./">SIMULATOR</a>
     </nav>
   </header>
 
   <main id="stage" class="stage">
+    <p id="fullscreenHint" class="fullscreen-hint" role="status" hidden></p>
     <canvas id="scene" aria-label="Interactive vehicle operator simulation"></canvas>
     <button id="vehicleViewToggle" class="vehicle-view-toggle" type="button" aria-pressed="false" hidden>EXTERIOR VIEW</button>
 
@@ -107,6 +109,6 @@
 
   <script src="vendor/three-0.128.0/three.min.js"></script>
   <script src="vendor/three-0.128.0/GLTFLoader.js"></script>
-  <script src="js/simulator.js?v=patrol-speed-18"></script>
+  <script src="js/simulator.js?v=mobile-display-2"></script>
 </body>
 </html>
