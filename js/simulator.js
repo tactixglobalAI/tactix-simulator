@@ -2197,25 +2197,30 @@
   function startPatrolFinale(){
     if(patrolFinaleTime!==null)return;
     patrolFinaleTime=0;vehicleSpeed=driverSpeedTarget=0;postSendObservation=false;expandedDialog.close();
-    exteriorView=true;exteriorManual=false;operator.visible=true;setState(STATES.PATROL_FINALE);
+    exteriorView=true;exteriorManual=false;setState(STATES.PATROL_FINALE);
     el.sentry.textContent='REVIEW COMPLETE';el.lookHint.hidden=true;
     updatePatrolFinale(0);
   }
   function updatePatrolFinale(dt){
-    patrolFinaleTime=Math.min(4,patrolFinaleTime+dt);
-    const progress=phaseEase(patrolFinaleTime/4),angle=-Math.PI/2+Math.PI*progress;
-    const car=vehicle.localToWorld(new THREE.Vector3(0,1.1,0));
-    const person=contact.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,.6,0));
-    const focus=car.clone().lerp(person,.5),direction=new THREE.Vector3(Math.sin(angle),.50,Math.cos(angle)).normalize();
+    // Brief fade hides the cabin-to-exterior cut, then a complete, unhurried orbit.
+    // Constant enclosing radius avoids camera pumping as the projected bounds change.
+    patrolFinaleTime=Math.min(12,patrolFinaleTime+dt);
+    if(patrolFinaleTime<.35){el.entryFade.style.opacity=String(phaseEase(patrolFinaleTime/.35));return;}
+    operator.visible=true;
+    const progress=phaseEase(THREE.MathUtils.clamp((patrolFinaleTime-.35)/10.5,0,1));
+    const angle=Math.PI/2+Math.PI*2*progress;
+    const bounds=new THREE.Box3();
+    for(const object of [vehicle,vegetation,contact])bounds.union(new THREE.Box3().setFromObject(object));
+    const sphere=bounds.getBoundingSphere(new THREE.Sphere()),focus=sphere.center;
     camera.fov=55;camera.updateProjectionMatrix();
-    const half=THREE.MathUtils.degToRad(camera.fov/2),right=new THREE.Vector3(0,1,0).cross(direction).normalize(),up=direction.clone().cross(right);
-    const points=[];
-    for(const object of [vehicle,vegetation,contact]){const box=new THREE.Box3().setFromObject(object);for(const x of [box.min.x,box.max.x])for(const y of [box.min.y,box.max.y])for(const z of [box.min.z,box.max.z])points.push(new THREE.Vector3(x,y,z));}
-    let distance=10;
-    for(const point of points){const delta=point.sub(focus);distance=Math.max(distance,delta.dot(direction)+Math.abs(delta.dot(right))/Math.tan(half)/camera.aspect*1.18,delta.dot(direction)+Math.abs(delta.dot(up))/Math.tan(half)*1.18);}
+    const half=THREE.MathUtils.degToRad(camera.fov/2);
+    const limitingHalf=Math.min(half,Math.atan(Math.tan(half)*camera.aspect));
+    const distance=Math.max(14,sphere.radius*1.15/Math.sin(limitingHalf));
+    // Elevated orbit clears nearby roofs and trees; the +X start/end is the open garden side.
+    const direction=new THREE.Vector3(Math.sin(angle),.8,Math.cos(angle)).normalize();
     camera.position.copy(focus).addScaledVector(direction,distance);camera.lookAt(focus);
-    el.entryFade.style.opacity=String(phaseEase((patrolFinaleTime-3.65)/.35));
-    if(patrolFinaleTime>=4)completeScenario();
+    el.entryFade.style.opacity=String(patrolFinaleTime<.7?1-phaseEase((patrolFinaleTime-.35)/.35):phaseEase((patrolFinaleTime-11.5)/.5));
+    if(patrolFinaleTime>=12)completeScenario();
   }
 
   function completeScenario() {
