@@ -1133,6 +1133,10 @@
     return [{x:24,w:672,label:sensorThermal?'VIEW VISIBLE':'VIEW THERMAL',action:()=>{sensorVisible=true;sensorThermal=!sensorThermal;}}];
   }
 
+  function suggestedScreenAction(label) {
+    return ['BEGIN PATROL','SEND CLIP','KEEP LOCAL','PROCEED WITH PATROL'].includes(label);
+  }
+
   function renderTouchscreen() {
     if(!touchscreenUI)return;
     const ui=touchscreenUI,ctx=ui.context;
@@ -1154,6 +1158,7 @@
       }
       for(const button of touchscreenControls()) {
         ctx.fillStyle='#203e52';ctx.fillRect(button.x,button.y??400,button.w,button.h??72);
+        if(suggestedScreenAction(button.label)){ctx.strokeStyle='#86c6d9';ctx.lineWidth=3;ctx.strokeRect(button.x+2,(button.y??400)+2,button.w-4,(button.h??72)-4);}
         ctx.fillStyle='#e3f1f8';ctx.font=(button.h?'bold 23px monospace':'bold 28px monospace');ctx.textAlign='center';ctx.fillText(button.label,button.x+button.w/2,(button.y??400)+(button.h??72)/2+10);ctx.textAlign='left';
       }
       ui.texture.needsUpdate=true;
@@ -1188,6 +1193,7 @@
   }));
   function updateExpandedTouchscreen(now) {
     expandedButton.hidden=!seatedStates.includes(state);
+    expandedButton.classList.toggle('suggested-action',!expandedDialog.open && innerWidth<=900 && (state===STATES.VEHICLE_FIRST_PERSON || eventClip.status==='READY' || observationPhase==='OBSERVING'));
     if(!expandedDialog.open)return;
     manualButton.hidden=state===STATES.VEHICLE_FIRST_PERSON;
     manualButton.textContent=manualPtz?'AUTO PTZ':'MANUAL PTZ';
@@ -1205,6 +1211,7 @@
       for(const entry of buttons) {
         const button=document.createElement('button');button.type='button';button.textContent=entry.label;
         if(entry.w>300)button.className='wide';
+        if(suggestedScreenAction(entry.label))button.classList.add('suggested-action');
         button.addEventListener('click',()=>{prepareNarration();entry.action();});controls.appendChild(button);
       }
     }
@@ -1881,6 +1888,8 @@
 
   function updateOperatorCamera(now) {
     if (!operatorEye) return;
+    const seatedFov=!exteriorView && camera.aspect<1 ? Math.min(100,THREE.MathUtils.radToDeg(2*Math.atan(Math.tan(THREE.MathUtils.degToRad(35))/camera.aspect))) : 70;
+    if(camera.fov!==seatedFov){camera.fov=seatedFov;camera.updateProjectionMatrix();}
     operator.visible=exteriorView && !!seatedRootLocal;
     if(seatedRootLocal) {operator.position.copy(vehiclePoint(seatedRootLocal.toArray()));operator.updateMatrixWorld(true);}
     if(exteriorView) {
@@ -1899,7 +1908,8 @@
     // Rigid seat mount: no walking-style bob or lateral head sway.
     camera.position.copy(pos);
     camera.rotation.order = "YXZ";
-    camera.rotation.y = yaw;
+    const portraitRest=camera.aspect<1 && observationPhase==='NONE' && !expandedDialog.open && !clipMonitorAttention && patrolElapsed>=manualLookUntil;
+    camera.rotation.y = yaw+(portraitRest?.18:0);
     camera.rotation.x = pitch;
     camera.rotation.z = 0;
   }

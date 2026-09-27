@@ -251,3 +251,27 @@ body { display:flex; flex-direction:column; height:100dvh; padding:env(safe-area
 #manualPtzBearing { margin:6px 0; font-size:12px; }
 
 #manualPtzBearing { min-height:0; }
+
+/* Readable interaction view on phones; physical enclosure retains its scale. */
+.touchscreen-dialog { scrollbar-color:#526b83 #07121b; }
+.screen-actions { min-width:0; }
+@media (pointer:coarse), (max-width:900px) {
+  .touchscreen-dialog button { font-size:14px; font-weight:600; letter-spacing:.025em; padding:10px 8px; }
+  .touchscreen-dialog p { font-size:15px; }
+  .touchscreen-dialog small { font-size:12px; line-height:1.4; }
+  .touchscreen-dialog .ptz-pad button { font-size:24px; }
+  .expanded-controls { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .expanded-controls .wide { grid-column:1/-1; }
+}
+@media (orientation:landscape) and (max-height:550px) {
+  .touchscreen-dialog[open] { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(260px,1fr); grid-template-rows:auto auto 1fr; gap:8px 14px; width:min(940px,calc(100vw - 20px)); max-height:calc(100dvh - 12px); }
+  .touchscreen-dialog header { grid-column:1/-1; }
+  .touchscreen-dialog #expandedStatus { grid-column:1; margin:0; font-size:14px; }
+  .touchscreen-dialog canvas { grid-column:1; width:100%; max-height:calc(100dvh - 145px); height:auto; object-fit:contain; align-self:start; }
+  .screen-actions { grid-column:2; grid-row:2/4; max-height:calc(100dvh - 90px); overflow-y:auto; padding-right:4px; }
+  .screen-actions #manualPtzButton { margin-top:0; }
+  .screen-actions .expanded-controls { margin-top:8px; }
+}
+
+button.suggested-action { border-color:#86c6d9; box-shadow:0 0 0 1px #86c6d944,0 0 10px #86c6d922; }
+button.suggested-action:hover,button.suggested-action:focus-visible { outline:2px solid #b9e5f0; outline-offset:2px; }
