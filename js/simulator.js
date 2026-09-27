@@ -158,7 +158,7 @@
   let wheelTravel=0;
   let driverSpeedTarget=5;
   let officerSlowAt=null,officerSlowPending=false;
-  let personObservationTime=0, automaticPatrolAt=null, driverSightClear=false, nextSightCheck=0, postSendObservation=false;
+  let personObservationTime=0, automaticPatrolAt=null, driverSightClear=false, nextSightCheck=0, postSendObservation=false, approachTracking=false;
   let clipMonitorAttention=false, clipReturnTimer=null;
   let observationPhase="NONE", resumeLookTime=0, manualLookUntil=0, screenAttention=false;
   let originalSpeedometer=null;
@@ -1643,7 +1643,7 @@
       const pixels=new Uint8Array(4);renderer.readRenderTargetPixels(touchscreenUI.target,650,34,1,1,pixels);
       return {pixelRatio:renderer.getPixelRatio(),buttonPixel:Array.from(pixels),screenSize:[touchscreenUI.target.width,touchscreenUI.target.height]};
     },
-    speedometerSnapshot() {return {observationPhase,postSendObservation,driverSightClear,personObservationTime,clipMonitorAttention,yaw,pitch,value:originalSpeedometer?.last,extraDisplayVisible:cockpit?.getObjectByName("InstrumentClusterSurface")?.visible,officerSlowPending,officerSlowAt};},
+    speedometerSnapshot() {return {observationPhase,approachTracking,postSendObservation,driverSightClear,personObservationTime,clipMonitorAttention,yaw,pitch,value:originalSpeedometer?.last,extraDisplayVisible:cockpit?.getObjectByName("InstrumentClusterSurface")?.visible,officerSlowPending,officerSlowAt};},
     eventSnapshot() {return {status:eventClip.status,sentAt:eventClip.sentAt,sendStarted:eventClip.sendStarted,bytes:eventClip.blob?.size||0,url:eventClip.url,frames:eventClip.frames,error:eventClip.error,driverSpeedTarget,vehicleSpeed};},
     driverSpeed(speed) {if(debugEntry && [0,OBSERVATION_SPEED,PATROL_SPEED].includes(speed))setDriverSpeed(speed);},
     clipChoice(choice) {if(!debugEntry)return;if(choice==='SEND')simulateClipSend();if(choice==='KEEP')keepClipLocal();},
@@ -1930,7 +1930,7 @@
       const offset=touchscreenSurface.getWorldPosition(new THREE.Vector3()).sub(operatorEye.getWorldPosition(new THREE.Vector3()));
       targetYaw=Math.atan2(-offset.x,-offset.z);
       targetPitch=Math.atan2(offset.y,Math.hypot(offset.x,offset.z));
-    } else if(observationPhase==='OBSERVING') {
+    } else if(observationPhase==='OBSERVING' || (observationPhase==='STOPPING' && approachTracking)) {
       const offset=contact.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,.95,0)).sub(operatorEye.getWorldPosition(new THREE.Vector3()));
       targetYaw=Math.atan2(-offset.x,-offset.z);
       targetPitch=Math.atan2(offset.y,Math.hypot(offset.x,offset.z));
@@ -1943,26 +1943,29 @@
     pitch+=THREE.MathUtils.clamp((targetPitch-pitch)*step,-dt*.45,dt*.45);
   }
 
-  function settledPersonSightline() {
-    if(!operatorEye || !cockpit || vehicleSpeed>.01)return false;
-    const eye=operatorEye.getWorldPosition(new THREE.Vector3());
-    const target=contact.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,1.25,0));
-    const delta=target.clone().sub(eye);
-    const aimYaw=THREE.MathUtils.clamp(Math.atan2(-delta.x,-delta.z),-1.05,1.05);
-    const aimPitch=THREE.MathUtils.clamp(Math.atan2(delta.y,Math.hypot(delta.x,delta.z)),-.5,.35);
-    if(Math.abs(yaw-aimYaw)>.06 || Math.abs(pitch-aimPitch)>.07)return false;
+  function personSightlineClear() {
+    if(!operatorEye || !cockpit)return false;
     if(patrolElapsed>=nextSightCheck) {
-      nextSightCheck=patrolElapsed+.25;
+      nextSightCheck=patrolElapsed+.15;
       vehicle.updateMatrixWorld(true);vegetation.updateMatrixWorld(true);
+      const eye=operatorEye.getWorldPosition(new THREE.Vector3());
+      const delta=contact.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,1.25,0)).sub(eye);
       const ray=new THREE.Raycaster(eye,delta.clone().normalize(),.02,delta.length()-.1);
-      const blocking=ray.intersectObjects([cockpit,vegetation],true).some(hit=>{
+      driverSightClear=!ray.intersectObjects([cockpit,vegetation],true).some(hit=>{
         for(let node=hit.object;node;node=node.parent)if(!node.visible)return false;
         const material=Array.isArray(hit.object.material)?hit.object.material[hit.face.materialIndex]:hit.object.material;
         return material && !(material.transparent && material.opacity<.5);
       });
-      driverSightClear=!blocking;
     }
     return driverSightClear;
+  }
+
+  function settledPersonSightline() {
+    if(!operatorEye || vehicleSpeed>.01)return false;
+    const delta=contact.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,1.25,0)).sub(operatorEye.getWorldPosition(new THREE.Vector3()));
+    const aimYaw=THREE.MathUtils.clamp(Math.atan2(-delta.x,-delta.z),-1.05,1.05);
+    const aimPitch=THREE.MathUtils.clamp(Math.atan2(delta.y,Math.hypot(delta.x,delta.z)),-.5,.35);
+    return Math.abs(yaw-aimYaw)<=.06 && Math.abs(pitch-aimPitch)<=.07 && personSightlineClear();
   }
 
   function updatePatrolVehicle(dt) {
@@ -1970,7 +1973,7 @@
     patrolElapsed+=dt;
     contact.visible=patrolElapsed>=ENCOUNTER_DELAY;
     if(officerSlowPending && patrolElapsed>=officerSlowAt) {
-      officerSlowPending=false;officerSlowAt=null;driverSpeedTarget=OBSERVATION_SPEED;observationPhase="STOPPING";
+      officerSlowPending=false;officerSlowAt=null;driverSpeedTarget=OBSERVATION_SPEED;observationPhase="STOPPING";approachTracking=false;nextSightCheck=0;
       setMessage('Officer slowing to a stop to observe the person.',false);
     }
     if(observationPhase==='STOPPING' && vehicleSpeed<.01) {
@@ -1981,6 +1984,7 @@
       resumeLookTime+=dt;
       if(resumeLookTime>=1.5 && Math.abs(yaw-.22)<.04){observationPhase='NONE';driverSpeedTarget=PATROL_SPEED;}
     }
+    if(observationPhase==='STOPPING' && !approachTracking && vehicleSpeed<=2 && vehicle.position.z-(contact.position.z+1.5)<=8 && personSightlineClear())approachTracking=true;
     updateDriverAttention(dt);
     if(observationPhase==='OBSERVING' && !exteriorView && !expandedDialog.open && !clipMonitorAttention && settledPersonSightline())personObservationTime+=dt;
     if(postSendObservation && personObservationTime>=5)proceedPatrol();
