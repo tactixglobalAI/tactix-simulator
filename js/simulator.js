@@ -1801,7 +1801,7 @@
       window.TactixLaunchAudio?.stop();
       setState(STATES.COMPLETE);document.getElementById('completionTitle').textContent='Launch demonstration complete';
       const list=document.getElementById('completionSummary');list.replaceChildren();
-      for(const text of ['Launch authorized by operator','Vehicle remained stationary','Interceptor cleared roof hardware and approached the air contact','Demonstration ended · interception outcome not simulated']){const li=document.createElement('li');li.textContent=text;list.appendChild(li);}
+      for(const text of ['Launch authorized by operator','Vehicle remained stationary','Interceptor cleared roof hardware and approached the air contact']){const li=document.createElement('li');li.textContent=text;list.appendChild(li);}
       document.getElementById('viewRecordedClip').hidden=true;document.getElementById('completionPanel').hidden=false;document.getElementById('replayScenario').focus();
     }
   }
