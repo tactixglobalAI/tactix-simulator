@@ -305,3 +305,16 @@ button.suggested-action:hover,button.suggested-action:focus-visible { outline:2p
 #airVoiceButton { min-height:44px; margin-top:10px; }
 #airVoiceHint { display:block; margin-top:8px; line-height:1.5; color:#9db0c0; }
 #airVoiceHint[hidden] { display:none; }
+
+/* Stronger operator decision cue: smooth glow, never a rapid strobe. */
+@keyframes operator-decision-pulse {
+  0%,100% { border-color:#bb914c; background-color:#203e52; box-shadow:0 0 0 1px #d5a34c55; }
+  50% { border-color:#ffe0a1; background-color:#64532f; box-shadow:0 0 0 2px #ffc35f99,0 0 20px #ffc35f88; }
+}
+button.suggested-action:not(:disabled), .clip-send-hint { animation:operator-decision-pulse 1.6s ease-in-out infinite; }
+@media(prefers-reduced-motion:reduce) {
+  button.suggested-action:not(:disabled), .clip-send-hint { animation:none; border:2px solid #ffd078; background:#54462d; }
+}
+
+.aircraft-label { position:absolute; transform:translate(-50%,-150%); padding:4px 7px; font:11px monospace; color:#ffe0a1; background:#07121bbb; border-left:2px solid #ffd078; pointer-events:none; white-space:nowrap; }
+.aircraft-label[hidden] { display:none; }

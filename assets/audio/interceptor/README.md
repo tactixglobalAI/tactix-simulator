@@ -33,3 +33,7 @@ ffmpeg -i /home/praj/Downloads/PrototypeV1InterceptorLaunch.mp4 \
 Validation: ffprobe verified MP3/stereo/44.1 kHz and size; full ffmpeg decode completed without errors. Standalone controller lifecycle checks covered a delayed decode starting at the correct 1.2-second offset, paused timeline continuity, replay without overlap, and stopping.
 
 After cleanup, full decode passed and ffmpeg silence detection measured silence from 0 through 2.56224 seconds at −60 dBFS (including the start of the fade). The ten-second timeline remains intact.
+
+## Extended sky demonstration
+
+`launch-sky-demo.mp3` retains the cleaned lead-in through9.2s and crossfades four copies of the same source's8.2–9.4s rotor segment, fading out by12.95s. No material beyond the reference's first10s is used. Total encoded duration is about13.4s; playback stops at scenario completion. Rebuild with the existing voice Python environment and `scripts/extend_launch_audio.py` (numpy and ffmpeg). The original cleaned10second clip remains unchanged.

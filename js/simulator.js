@@ -133,7 +133,10 @@
   let entryDoor = null;
   let ptzMount = null;
   let selectedScenario="patrol", launchData=null, launchFlight=null, launchRotors=[], launchTime=0, launchCount=0, aerialContact=null;
-  const air = {phase:"IDLE",time:0,acquired:0,pan:0,tilt:0,fov:32,cueZ:0,launchBearing:0,confirmed:false,history:[]};
+  const air = {phase:"IDLE",time:0,acquired:0,pan:0,tilt:0,fov:32,cueZ:0,launchBearing:0,approach:null,confirmed:false,history:[]};
+  const aircraftLabels=['INTERCEPTOR 01','AIR CONTACT 01'].map(text=>{
+    const label=document.createElement('span');label.className='aircraft-label';label.textContent=text;label.hidden=true;label.setAttribute('aria-hidden','true');el.stage.appendChild(label);return label;
+  });
   let roofHardware=null, ptzPan=null, ptzTilt=null, ptzOptical=null, ptzRig=null, interceptorRig=null;
   const interactionTargets = {};
   const rigBones = {};
@@ -192,7 +195,7 @@
   const narrationHistory=[];
   let narrationError = null;
   const narrationBuffers = new Map();
-  const narrationManifest = fetch('assets/audio/narration/manifest.json?v=air-1')
+  const narrationManifest = fetch('assets/audio/narration/manifest.json?v=air-2')
     .then(response => { if (!response.ok) throw new Error('Narration manifest unavailable'); return response.json(); })
     .catch(error => { narrationError = error.message; return { clips: {} }; });
   let officerLoaded = false;
@@ -1178,14 +1181,14 @@
   }
 
   function suggestedScreenAction(label) {
-    return ['SEND CLIP','KEEP LOCAL','PROCEED WITH PATROL','AUTHORIZE LAUNCH','CONFIRM LAUNCH','LAUNCH DEMO'].includes(label);
+    return ['SEND CLIP','KEEP LOCAL','PROCEED WITH PATROL','AUTHORIZE LAUNCH','CONFIRM LAUNCH','LAUNCH DEMO','FOLLOW','DISMISS','CANCEL','END DEMO'].includes(label);
   }
 
   function renderTouchscreen() {
     if(!touchscreenUI)return;
     const ui=touchscreenUI,ctx=ui.context;
-    const sendPulse=eventClip.status==='READY' && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const pulseTime=sendPulse?Math.floor(performance.now()/100):0;
+    const sendPulse=touchscreenControls().some(b=>suggestedScreenAction(b.label)) && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const pulseTime=sendPulse?Math.floor(performance.now()/50):0;
     const label=[selectedScenario==='interception'?Math.floor(air.time*4):0,pulseTime,state,observationPhase,manualPtz,eventClip.status,driverSpeedTarget,sensorVisible,sensorThermal,Math.round(vehicleSpeed*3.6).toString(),el.message.textContent].join('|');
     if(label!==ui.lastLabel) {
       ui.lastLabel=label;
@@ -1204,11 +1207,14 @@
         ctx.font='23px monospace';ctx.fillText(state===STATES.DISMISSED?'Sentry One PTZ has resumed scanning.':'Patrol starting automatically…',360,255);ctx.textAlign='left';
       }
       for(const button of touchscreenControls()) {
-        ctx.fillStyle='#203e52';ctx.fillRect(button.x,button.y??400,button.w,button.h??72);
-        if(suggestedScreenAction(button.label)){
-          ctx.save();ctx.strokeStyle='#86c6d9';ctx.lineWidth=3;
-          if(button.label==='SEND CLIP' && sendPulse){const glow=.5-.5*Math.cos(performance.now()*Math.PI*2/2800);ctx.globalAlpha=.4+.6*glow;ctx.shadowColor='#86c6d9';ctx.shadowBlur=10*glow;}
-          ctx.strokeRect(button.x+2,(button.y??400)+2,button.w-4,(button.h??72)-4);ctx.restore();
+        const suggested=suggestedScreenAction(button.label);
+        const glow=sendPulse?.5-.5*Math.cos(performance.now()*Math.PI*2/1600):1;
+        ctx.fillStyle=suggested?`rgb(${Math.round(40+50*glow)},${Math.round(61+27*glow)},${Math.round(68-16*glow)})`:'#203e52';
+        ctx.fillRect(button.x,button.y??400,button.w,button.h??72);
+        if(suggested){
+          ctx.save();ctx.strokeStyle='#ffd078';ctx.lineWidth=4;ctx.globalAlpha=.55+.45*glow;
+          ctx.shadowColor='#ffc35f';ctx.shadowBlur=18*glow;
+          ctx.strokeRect(button.x+3,(button.y??400)+3,button.w-6,(button.h??72)-6);ctx.restore();
         }
         ctx.fillStyle='#e3f1f8';ctx.font=(button.h?'bold 23px monospace':'bold 28px monospace');ctx.textAlign='center';ctx.fillText(button.label,button.x+button.w/2,(button.y??400)+(button.h??72)/2+10);ctx.textAlign='left';
       }
@@ -1271,7 +1277,7 @@
   }));
   function updateExpandedTouchscreen(now) {
     expandedButton.hidden=!seatedStates.includes(state) || state===STATES.LAUNCHING;
-    expandedButton.classList.toggle('suggested-action',!expandedDialog.open && innerWidth<=900 && (eventClip.status==='READY' || observationPhase==='OBSERVING'));
+    expandedButton.classList.toggle('suggested-action',!expandedDialog.open && innerWidth<=900 && (eventClip.status==='READY' || observationPhase==='OBSERVING' || (selectedScenario==='interception' && ['TRACKING','CONFIRM'].includes(air.phase))));
     document.getElementById('touchscreenFootnote').textContent=selectedScenario==='interception'?'Research visualization · launch only; no interception shown':'Vehicle touchscreen · command-center transmission is simulated';
     const voiceStep=selectedScenario==='interception' && ['TRACKING','CONFIRM'].includes(air.phase);
     airVoiceHint.hidden=!voiceStep;airVoiceButton.hidden=!voiceStep || !(window.SpeechRecognition||window.webkitSpeechRecognition);
@@ -1665,7 +1671,7 @@
   function confirmAirLaunch() {
     if(air.phase!=='CONFIRM')return;
     airPhase('BRAKING');driverSpeedTarget=0;
-    setMessage('Launch confirmed. Stopping vehicle before launch.',true);
+    setMessage('Launch confirmed. Stop vehicle.',true);
   }
   function dismissAirContact() {
     if(!['TRACKING','CONFIRM'].includes(air.phase))return;
@@ -1708,9 +1714,9 @@
       air.pan+=THREE.MathUtils.clamp(error,-dt*.48,dt*.48);
       air.tilt+=THREE.MathUtils.clamp(tilt-air.tilt,-dt*.3,dt*.3);
       const aligned=Math.abs(error)<.012 && Math.abs(tilt-air.tilt)<.012;
-      air.fov=THREE.MathUtils.lerp(air.fov,aligned?.45:32,1-Math.exp(-dt*1.8));
+      air.fov=THREE.MathUtils.lerp(air.fov,aligned?.17:32,1-Math.exp(-dt*1.8));
       if(air.phase==='ACQUIRING'){
-        air.acquired=aligned && air.fov<.7?air.acquired+dt:0;
+        air.acquired=aligned && air.fov<.24?air.acquired+dt:0;
         if(air.acquired>1 && !narrationBusy){
           air.confirmed=true;airPhase('TRACKING');setState(STATES.TRACKING);el.sentry.textContent='AIR CONTACT 01 · TRACK ACTIVE';
           setMessage('Quadcopter confirmed. Tracking Air Contact One.',true);
@@ -1723,16 +1729,16 @@
     }
   }
   function launchPhase(){
-    if(launchTime<2.55)return 'DOCKED';if(launchTime<4.6)return 'ROTOR START';if(launchTime<5)return 'LIFT FROM DOCK';if(launchTime<157/30)return 'CLEAR VEHICLE';if(launchTime<5.5)return 'STABILIZE';if(launchTime<6)return 'PITCH FOR TRAVEL';if(launchTime<7)return 'ACCELERATE AWAY';return 'CLIMB';
+    if(launchTime>=(launchData?.duration??8))return 'SKY APPROACH';if(launchTime<2.55)return 'DOCKED';if(launchTime<4.6)return 'ROTOR START';if(launchTime<5)return 'LIFT FROM DOCK';if(launchTime<157/30)return 'CLEAR VEHICLE';if(launchTime<5.5)return 'STABILIZE';if(launchTime<6)return 'PITCH FOR TRAVEL';if(launchTime<7)return 'ACCELERATE AWAY';return 'CLIMB';
   }
   function authorizeLaunch(){
     if(state!==STATES.LAUNCH_READY || !launchFlight)return;
-    launchCount++;launchTime=0;window.TactixLaunchAudio?.start();expandedDialog.close();setState(STATES.LAUNCHING);exteriorView=true;operator.visible=true;exteriorManual=false;
+    launchCount++;launchTime=0;air.approach=null;window.TactixLaunchAudio?.start();expandedDialog.close();setState(STATES.LAUNCHING);exteriorView=true;operator.visible=true;exteriorManual=false;
     camera.position.copy(vehicle.position).add(camera.aspect<1?new THREE.Vector3(8,5.5,11):new THREE.Vector3(5,3.8,7));camera.lookAt(vehicle.position.clone().add(new THREE.Vector3(0,2,0)));
     el.sentry.textContent='LAUNCH AUTHORIZED';setMessage('Launch authorized. Vehicle remains parked.',false);
   }
   function updateLaunch(dt){
-    launchTime=Math.min(launchTime+dt,launchData.duration+2);
+    launchTime=Math.min(launchTime+dt,launchData.duration+5);
     const frame=Math.min(launchTime*launchData.fps,launchData.samples.length-1),i=Math.floor(frame),a=launchData.samples[i],b=launchData.samples[Math.min(i+1,launchData.samples.length-1)],u=frame-i;
     launchFlight.position.fromArray(a.p).lerp(new THREE.Vector3().fromArray(b.p),u);
     launchFlight.quaternion.fromArray(a.q).slerp(new THREE.Quaternion().fromArray(b.q),u);
@@ -1745,17 +1751,57 @@
     const departureTurn=-air.launchBearing*THREE.MathUtils.smoothstep(launchTime,5.5,7);
     launchFlight.position.applyAxisAngle(new THREE.Vector3(0,1,0),departureTurn);
     launchFlight.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),departureTurn));
+    // Fixed cinematic continuation ends short of the other aircraft; no contact event.
+    const extension=Math.max(0,launchTime-launchData.duration);
+    if(extension>0){
+      if(!air.approach){
+        const start=launchFlight.position.clone();
+        const target=interceptorRig.worldToLocal(aerialContact.getWorldPosition(new THREE.Vector3()));
+        const heading=target.clone().sub(start);heading.y=0;heading.normalize();
+        const end=target.clone().addScaledVector(heading,-12);end.y+=1.5;
+        air.approach=new THREE.CubicBezierCurve3(start,start.clone().add(new THREE.Vector3(0,24,0)),end.clone().addScaledVector(heading,-24).add(new THREE.Vector3(0,2,0)),end);
+      }
+      const t=Math.min(extension/5,1),u=t+t*t-t*t*t;
+      launchFlight.position.copy(air.approach.getPoint(u));
+      const tangent=air.approach.getTangent(u).normalize();
+      launchFlight.quaternion.slerp(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),tangent),THREE.MathUtils.smoothstep(extension,0,1.2));
+      launchRotors.forEach((r,n)=>r.rotation.y+=extension*90*(n<2?1:-1));
+    }
     launchFlight.updateMatrixWorld(true);
     const craft=launchFlight.getWorldPosition(new THREE.Vector3());
-    const aim=vehicle.position.clone().add(new THREE.Vector3(0,1.8,0)).lerp(craft,THREE.MathUtils.smoothstep(launchTime,4.6,6.5));
-    const desired=vehicle.position.clone().add(camera.aspect<1?new THREE.Vector3(8,5.5,11):new THREE.Vector3(5,3.8,7));
-    const blend=1-Math.exp(-dt*2);camera.position.lerp(desired,blend);camera.fov=THREE.MathUtils.lerp(camera.fov,THREE.MathUtils.lerp(camera.aspect<1?65:48,camera.aspect<1?26:16,THREE.MathUtils.smoothstep(launchTime,6,8)),blend);camera.updateProjectionMatrix();camera.lookAt(aim);
+    const oldAim=vehicle.position.clone().add(new THREE.Vector3(0,1.8,0)).lerp(craft,THREE.MathUtils.smoothstep(launchTime,4.6,6.5));
+    const oldPosition=vehicle.position.clone().add(camera.aspect<1?new THREE.Vector3(8,5.5,11):new THREE.Vector3(5,3.8,7));
+    const target=aerialContact.getWorldPosition(new THREE.Vector3());
+    const direction=target.clone().sub(craft).normalize();
+    const side=new THREE.Vector3().crossVectors(direction,new THREE.Vector3(0,1,0)).normalize();
+    // Trailing sky shot keeps both real-scale aircraft in depth within the same frame.
+    const horizontal=direction.clone();horizontal.y=0;horizontal.normalize();
+    const skyPosition=craft.clone().addScaledVector(horizontal,-18).addScaledVector(side,2);
+    skyPosition.y=Math.min(craft.y,target.y)-3;
+    const toCraft=craft.clone().sub(skyPosition).normalize(),toTarget=target.clone().sub(skyPosition).normalize();
+    const skyAim=skyPosition.clone().add(toCraft.clone().add(toTarget).normalize());
+    const forward=toCraft.clone().add(toTarget).normalize();
+    const viewRight=forward.clone().cross(new THREE.Vector3(0,1,0)).normalize();
+    const viewUp=viewRight.clone().cross(forward).normalize();
+    let halfFov=.07;
+    for(const point of [craft,target]){
+      const offset=point.clone().sub(skyPosition),depth=offset.dot(forward);
+      halfFov=Math.max(halfFov,Math.atan((Math.abs(offset.dot(viewUp))+.45)/depth)*1.2,Math.atan((Math.abs(offset.dot(viewRight))+.45)/(depth*camera.aspect))*1.2);
+    }
+    const fitFov=THREE.MathUtils.radToDeg(halfFov*2);
+    const skyBlend=THREE.MathUtils.smoothstep(launchTime,6.2,8.8);
+    camera.position.copy(oldPosition.lerp(skyPosition,skyBlend));camera.fov=THREE.MathUtils.lerp(camera.aspect<1?65:48,Math.max(12,fitFov),skyBlend);camera.updateProjectionMatrix();camera.lookAt(oldAim.lerp(skyAim,skyBlend));
+    for(const [index,point] of [craft,target].entries()){
+      const p=point.clone().project(camera),label=aircraftLabels[index];label.hidden=launchTime<8.8 || p.z>1 || Math.abs(p.x)>.95 || Math.abs(p.y)>.9;
+      label.style.left=(p.x*.5+.5)*100+'%';label.style.top=(-p.y*.5+.5)*100+'%';
+    }
     el.message.textContent=launchPhase().replaceAll('_',' ');el.sentry.textContent=launchPhase();
-    if(launchTime>=launchData.duration+2){
+    if(launchTime>=launchData.duration+5){
+      aircraftLabels.forEach(label=>label.hidden=true);
       window.TactixLaunchAudio?.stop();
       setState(STATES.COMPLETE);document.getElementById('completionTitle').textContent='Launch demonstration complete';
       const list=document.getElementById('completionSummary');list.replaceChildren();
-      for(const text of ['Launch authorized by operator','Vehicle remained stationary','Interceptor cleared roof hardware and climbed','Demonstration ended · interception outcome not simulated']){const li=document.createElement('li');li.textContent=text;list.appendChild(li);}
+      for(const text of ['Launch authorized by operator','Vehicle remained stationary','Interceptor cleared roof hardware and approached the air contact','Demonstration ended · interception outcome not simulated']){const li=document.createElement('li');li.textContent=text;list.appendChild(li);}
       document.getElementById('viewRecordedClip').hidden=true;document.getElementById('completionPanel').hidden=false;document.getElementById('replayScenario').focus();
     }
   }
@@ -1877,7 +1923,7 @@
   window.__tactixEntryDebug = {
     airCommand,
     airSnapshot(){return {phase:air.phase,time:air.time,confirmed:air.confirmed,history:air.history,pan:air.pan,tilt:air.tilt,fov:air.fov,target:aerialContact?.position.toArray(),vehicle:vehicle.position.toArray(),speed:vehicleSpeed,narrationBusy,buttons:touchscreenControls().map(b=>b.label),projection:aerialContact?.position.clone().project(sensorCamera).toArray()};},
-    launchSnapshot(){return {scenario:selectedScenario,state,time:launchTime,phase:launchPhase(),count:launchCount,vehicle:vehicle.position.toArray(),flight:launchFlight?.position.toArray(),rotors:launchRotors.map(r=>r.rotation.y),scale:interceptorRig?.scale.toArray()};},
+    launchSnapshot(){return {craft:launchFlight?.getWorldPosition(new THREE.Vector3()).toArray(),target:aerialContact?.getWorldPosition(new THREE.Vector3()).toArray(),craftProjection:launchFlight?.getWorldPosition(new THREE.Vector3()).project(camera).toArray(),targetProjection:aerialContact?.getWorldPosition(new THREE.Vector3()).project(camera).toArray(),scenario:selectedScenario,state,time:launchTime,phase:launchPhase(),count:launchCount,vehicle:vehicle.position.toArray(),flight:launchFlight?.position.toArray(),rotors:launchRotors.map(r=>r.rotation.y),scale:interceptorRig?.scale.toArray()};},
     patrolStep(dt, snapshot=true) {
       if(!debugEntry) return null;
       updatePatrolVehicle(dt);

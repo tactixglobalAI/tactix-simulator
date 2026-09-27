@@ -1,7 +1,7 @@
 /* User-provided launch reference, synchronized to the launch animation timeline. */
 (() => {
   'use strict';
-  const url = 'assets/audio/interceptor/launch-first-10s.mp3';
+  const url = 'assets/audio/interceptor/launch-sky-demo.mp3';
   let context, buffer, loading, source;
   let active = false, paused = false, elapsed = 0, startedAt = 0, error = null;
   const time = () => elapsed + (active && !paused ? (performance.now() - startedAt) / 1000 : 0);
@@ -14,11 +14,11 @@
   function playAvailable() {
     if (!active || paused || !buffer || !context || context.state !== 'running' || source) return;
     const offset = time();
-    if (offset >= Math.min(10, buffer.duration)) return;
+    if (offset >= buffer.duration) return;
     const next = context.createBufferSource();
     next.buffer = buffer; next.connect(context.destination); source = next;
     next.onended = () => { if (source === next) { source = null; next.disconnect(); } };
-    next.start(0, offset, Math.min(10, buffer.duration) - offset);
+    next.start(0, offset, buffer.duration - offset);
   }
   function prepare() {
     try {

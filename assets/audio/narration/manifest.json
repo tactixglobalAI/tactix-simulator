@@ -156,17 +156,17 @@
       "seconds": 3.4,
       "sha256": "df6e4ccd89d8bdfed8200872aaa55369bea019de14ae41b61eb1b7f51705a2aa"
     },
-    "Launch confirmed. Stopping vehicle before launch.": {
-      "file": "assets/audio/narration/air_stop.mp3?v=b3290cc484b4",
-      "spoken_text": "Launch confirmed. Stopping vehicle before launch.",
-      "seconds": 3.7,
-      "sha256": "b3290cc484b420bf262f5920f0dcf5ab44cb5f27c1d7234a203a26e545eeded2"
-    },
     "Interceptor launching.": {
       "file": "assets/audio/narration/air_launch.mp3?v=f7387b26213e",
       "spoken_text": "Interceptor launching.",
       "seconds": 2.2,
       "sha256": "f7387b26213ef00243beb318ab32352413136f5fab47bf84ca1c3a877e7b99de"
+    },
+    "Launch confirmed. Stop vehicle.": {
+      "file": "assets/audio/narration/air_stop.mp3?v=0d1ca1d0a2a1",
+      "spoken_text": "Launch confirmed. Stop vehicle.",
+      "seconds": 2.8,
+      "sha256": "0d1ca1d0a2a157bb78288fbb5ce5f83b9dc374dc4c6faaeddb1476ad6f34ce29"
     }
   }
 }
