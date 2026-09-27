@@ -1,7 +1,9 @@
 {
   "files": {
-    "THIRD_PARTY_NOTICES.md": "a2255032c9259abd10c585b386952f0ac41240dc8be0d3612a7f797f63f51c2d",
+    "THIRD_PARTY_NOTICES.md": "40eb4156282e3e5aec1b1852cc675dce67b11d3dba42c9561d2a83bb5695a486",
     "assets/animations/interceptor-launch.json": "ef211ba36bdd35b96d807bb669767dcde4fb0219fe2d955b692d8a80d1677be7",
+    "assets/audio/interceptor/README.md": "5595c3a8bc6d8e9fc997d8a7886b54725b567ebd022e907932d77bf4ae505358",
+    "assets/audio/interceptor/launch-first-10s.mp3": "6952d37a45826c2ad4e026c944d2d976cf4298f4f98b1097644f195b4309bdf0",
     "assets/audio/narration/KOKORO-LICENSE.txt": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
     "assets/audio/narration/README.md": "abd7d9cc0cdda99f551651367c41d9ea44f737d9320eee6b8cb42df8690a1dfe",
     "assets/audio/narration/clip_ready.mp3": "201c7f061963cf1dce0e09417b9b09c5949fd02f6dc313c4578d8f2ebd6d0b9e",
@@ -32,8 +34,9 @@
     "assets/models/ptz_touchscreen_clean.glb": "05015947c6deaeddd070fd033f69c30dbb24e588428a65f66846f5145d1b03d3",
     "assets/models/roof_platform.glb": "57ee7579da03712dfb555a1844bfb9dec597568a3512b0d6e768450009f55d03",
     "assets/models/tactical_officer_rigged.glb": "81df701be03d02b3a65518bac853fa503019017cb09d6b14b69760f974d28484",
-    "index.html": "297b29c1d21d5750e0e8707a259080555a8dcdf91fa7750408fcf38ea23da5e8",
-    "js/simulator.js": "26bdec4d2b5d1e83c52ba41eb5d8d5172540f7e1974478effce75fac5a3dc60b",
+    "index.html": "b0eff715b0fb5bfb401a4c3ec735469ce187d596c95ad1af9eaf03a9faa7b54d",
+    "js/launch-audio.js": "15637e83ab069e95fde5bc08dde1e64a2790d4274e042e064e31edfbb438e51f",
+    "js/simulator.js": "35dd26bc11840aae9b4b3ff96dc6dbb90c2b98938bb5e6b95cb411495c57e6ec",
     "styles.css": "2470cb4a9f639f9c4587b88f334047fd4e9587f97cb394bf2d279c32d7ec16f0",
     "vendor/three-0.128.0/GLTFLoader.js": "5c15967ba830918a9caea6338712c994c354bccd4edc4569bde411c3ec06a3e6",
     "vendor/three-0.128.0/LICENSE": "7dddf7c5b8fd10ee654db8857d75d104b5557889aa5a91fc4ca545ea7c07062f",

@@ -6,6 +6,7 @@ This project contains mixed-license assets. No blanket open-source license or pu
 |---|---|---|
 | Three.js 0.128.0 and GLTFLoader | three npm distribution, MIT | vendor/three-0.128.0/LICENSE |
 | Kokoro narration | Apache-2.0 engine and Kokoro-82M model; stock bf_emma voice | assets/audio/narration/README.md and KOKORO-LICENSE.txt |
+| Interceptor launch sound | First ten seconds of user-provided PrototypeV1InterceptorLaunch.mp4, supplied with explicit instruction to incorporate into this simulator | assets/audio/interceptor/README.md |
 | Bolero vehicle | Downloaded source; owner states licensed; exact redistribution terms not supplied | README.md; assets/source/bolero_camper |
 | Tactical officer | Owner-supplied licensed asset; exact redistribution terms not supplied | README.md; assets/source/tactical_officer |
 | Hooded male | Owner rechecked and confirmed permission for this public simulator deployment on 2026-09-26; creator/download URL and license text not supplied | assets/source/hooded_male/README.md |

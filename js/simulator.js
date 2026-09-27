@@ -25,6 +25,7 @@
     TRACKING: "TRACKING CONTACT",
     LAUNCH_READY: "LAUNCH REVIEW",
     LAUNCHING: "INTERCEPTOR LAUNCH",
+    PATROL_FINALE: "PATROL REVIEW",
     COMPLETE: "SCENARIO COMPLETE",
     DISMISSED: "CONTACT DISMISSED"
   });
@@ -162,7 +163,7 @@
   let wheelTravel=0;
   let driverSpeedTarget=5;
   let officerSlowAt=null,officerSlowPending=false;
-  let departureElapsed=null;
+  let departureElapsed=null, patrolFinaleTime=null;
   let observationPlan=null;
   let personObservationTime=0, automaticPatrolAt=null, driverSightClear=false, nextSightCheck=0, postSendObservation=false, approachTracking=false;
   let clipMonitorAttention=false, clipReturnTimer=null;
@@ -1093,7 +1094,7 @@
     clipReturnTimer=setTimeout(()=>{
       if(!clipMonitorAttention)return;
       clipMonitorAttention=false;manualLookUntil=0;
-      if(eventClip.status==='SIMULATED_SEND' && observationPhase==='OBSERVING'){postSendObservation=true;personObservationTime=0;}
+      if(['SIMULATED_SEND','KEPT_LOCAL'].includes(eventClip.status) && observationPhase==='OBSERVING'){startPatrolFinale();return;}
       expandedDialog.close();
     },delay);
   }
@@ -1140,7 +1141,7 @@
     if(seatedStates.includes(state) && state!==STATES.VEHICLE_FIRST_PERSON)buttons.push({x:438,w:258,y:8,h:48,label:manualPtz?'PTZ CONTROLS':'MANUAL PTZ',physicalOnly:true,action:()=>{
       expandedDialog.showModal();expandedLabel='';if(!manualPtz)manualButton.click();
     }});
-    if(observationPhase==='OBSERVING')buttons.push({x:24,w:672,y:340,h:48,label:'PROCEED WITH PATROL',action:proceedPatrol});
+    if(observationPhase==='OBSERVING' && !['READY','TRANSMITTING','SIMULATED_SEND'].includes(eventClip.status))buttons.push({x:24,w:672,y:340,h:48,label:'PROCEED WITH PATROL',action:proceedPatrol});
     return buttons;
   }
 
@@ -1574,7 +1575,7 @@
 
   async function beginInterception(){
     if(state!==STATES.READY)return;
-    prepareNarration();
+    prepareNarration();window.TactixLaunchAudio?.prepare();
     const button=document.getElementById('interceptionButton');button.disabled=true;el.enter.disabled=true;button.textContent='LOADING LAUNCH…';
     try {
       if(!launchData){const response=await fetch('assets/animations/interceptor-launch.json?v=1');if(!response.ok)throw new Error('Launch motion unavailable');launchData=await response.json();}
@@ -1607,11 +1608,11 @@
     } catch(error){console.error(error);button.textContent='RETRY INTERCEPTION';button.disabled=false;el.enter.disabled=false;}
   }
   function launchPhase(){
-    if(launchTime<3.5)return 'DOCKED';if(launchTime<4.6)return 'ROTOR START';if(launchTime<5)return 'LIFT FROM DOCK';if(launchTime<157/30)return 'CLEAR VEHICLE';if(launchTime<5.5)return 'STABILIZE';if(launchTime<6)return 'PITCH FOR TRAVEL';if(launchTime<7)return 'ACCELERATE AWAY';return 'CLIMB';
+    if(launchTime<2.55)return 'DOCKED';if(launchTime<4.6)return 'ROTOR START';if(launchTime<5)return 'LIFT FROM DOCK';if(launchTime<157/30)return 'CLEAR VEHICLE';if(launchTime<5.5)return 'STABILIZE';if(launchTime<6)return 'PITCH FOR TRAVEL';if(launchTime<7)return 'ACCELERATE AWAY';return 'CLIMB';
   }
   function authorizeLaunch(){
     if(state!==STATES.LAUNCH_READY || !launchFlight)return;
-    launchCount++;launchTime=0;expandedDialog.close();setState(STATES.LAUNCHING);exteriorView=true;operator.visible=true;exteriorManual=false;
+    launchCount++;launchTime=0;window.TactixLaunchAudio?.start();expandedDialog.close();setState(STATES.LAUNCHING);exteriorView=true;operator.visible=true;exteriorManual=false;
     camera.position.copy(vehicle.position).add(camera.aspect<1?new THREE.Vector3(8,5.5,11):new THREE.Vector3(5,3.8,7));camera.lookAt(vehicle.position.clone().add(new THREE.Vector3(0,2,0)));
     el.sentry.textContent='LAUNCH AUTHORIZED';setMessage('Launch authorized. Vehicle remains parked.',false);
   }
@@ -1620,7 +1621,12 @@
     const frame=Math.min(launchTime*launchData.fps,launchData.samples.length-1),i=Math.floor(frame),a=launchData.samples[i],b=launchData.samples[Math.min(i+1,launchData.samples.length-1)],u=frame-i;
     launchFlight.position.fromArray(a.p).lerp(new THREE.Vector3().fromArray(b.p),u);
     launchFlight.quaternion.fromArray(a.q).slerp(new THREE.Quaternion().fromArray(b.q),u);
-    launchRotors.forEach((r,n)=>r.rotation.y=THREE.MathUtils.lerp(a.rotors[n],b.rotors[n],u));
+    // Rotor harmonics in the reference begin near 2.65s. Extend spin-up to match
+    // the cleaned audio lead-in; retain the reviewed lift/flight timeline unchanged.
+    const rotorTime=launchTime<2.55?0:launchTime<4.6?3.5+(launchTime-2.55)*1.1/2.05:launchTime;
+    const rf=Math.min(rotorTime*launchData.fps,launchData.samples.length-1),ri=Math.floor(rf);
+    const ra=launchData.samples[ri],rb=launchData.samples[Math.min(ri+1,launchData.samples.length-1)];
+    launchRotors.forEach((r,n)=>r.rotation.y=THREE.MathUtils.lerp(ra.rotors[n],rb.rotors[n],rf-ri));
     launchFlight.updateMatrixWorld(true);
     const craft=launchFlight.getWorldPosition(new THREE.Vector3());
     const aim=vehicle.position.clone().add(new THREE.Vector3(0,1.8,0)).lerp(craft,THREE.MathUtils.smoothstep(launchTime,4.6,6.5));
@@ -1628,6 +1634,7 @@
     const blend=1-Math.exp(-dt*2);camera.position.lerp(desired,blend);camera.fov=THREE.MathUtils.lerp(camera.fov,camera.aspect<1?65:48,blend);camera.updateProjectionMatrix();camera.lookAt(aim);
     el.message.textContent=launchPhase().replaceAll('_',' ');el.sentry.textContent=launchPhase();
     if(launchTime>=launchData.duration+2){
+      window.TactixLaunchAudio?.stop();
       setState(STATES.COMPLETE);document.getElementById('completionTitle').textContent='Launch demonstration complete';
       const list=document.getElementById('completionSummary');list.replaceChildren();
       for(const text of ['Launch authorized by operator','Vehicle remained stationary','Interceptor cleared roof hardware and climbed','Demonstration ended · interception outcome not simulated']){const li=document.createElement('li');li.textContent=text;list.appendChild(li);}
@@ -1784,7 +1791,7 @@
       const pixels=new Uint8Array(4);renderer.readRenderTargetPixels(touchscreenUI.target,650,34,1,1,pixels);
       return {pixelRatio:renderer.getPixelRatio(),buttonPixel:Array.from(pixels),screenSize:[touchscreenUI.target.width,touchscreenUI.target.height]};
     },
-    speedometerSnapshot() {return {departureElapsed,observationPhase,plan:observationPlan?{stop:observationPlan.stop.toArray(),ahead:observationPlan.ahead,bearing:observationPlan.bearing,visibleSamples:observationPlan.visibleSamples,brakingDistance:observationPlan.brakingDistance,fallback:observationPlan.fallback}:null,approachTracking,postSendObservation,driverSightClear,personObservationTime,clipMonitorAttention,yaw,pitch,value:originalSpeedometer?.last,extraDisplayVisible:cockpit?.getObjectByName("InstrumentClusterSurface")?.visible,officerSlowPending,officerSlowAt};},
+    speedometerSnapshot() {return {patrolFinaleTime,departureElapsed,observationPhase,plan:observationPlan?{stop:observationPlan.stop.toArray(),ahead:observationPlan.ahead,bearing:observationPlan.bearing,visibleSamples:observationPlan.visibleSamples,brakingDistance:observationPlan.brakingDistance,fallback:observationPlan.fallback}:null,approachTracking,postSendObservation,driverSightClear,personObservationTime,clipMonitorAttention,yaw,pitch,value:originalSpeedometer?.last,extraDisplayVisible:cockpit?.getObjectByName("InstrumentClusterSurface")?.visible,officerSlowPending,officerSlowAt};},
     eventSnapshot() {return {status:eventClip.status,sentAt:eventClip.sentAt,sendStarted:eventClip.sendStarted,bytes:eventClip.blob?.size||0,url:eventClip.url,frames:eventClip.frames,error:eventClip.error,driverSpeedTarget,vehicleSpeed};},
     driverSpeed(speed) {if(debugEntry && [0,OBSERVATION_SPEED,PATROL_SPEED].includes(speed))setDriverSpeed(speed);},
     clipChoice(choice) {if(!debugEntry)return;if(choice==='SEND')simulateClipSend();if(choice==='KEEP')keepClipLocal();},
@@ -2187,11 +2194,35 @@
     return Math.abs(yaw-aimYaw)<=.06 && Math.abs(pitch-aimPitch)<=.07 && personSightlineClear();
   }
 
+  function startPatrolFinale(){
+    if(patrolFinaleTime!==null)return;
+    patrolFinaleTime=0;vehicleSpeed=driverSpeedTarget=0;postSendObservation=false;expandedDialog.close();
+    exteriorView=true;exteriorManual=false;operator.visible=true;setState(STATES.PATROL_FINALE);
+    el.sentry.textContent='REVIEW COMPLETE';el.lookHint.hidden=true;
+    updatePatrolFinale(0);
+  }
+  function updatePatrolFinale(dt){
+    patrolFinaleTime=Math.min(4,patrolFinaleTime+dt);
+    const progress=phaseEase(patrolFinaleTime/4),angle=-Math.PI/2+Math.PI*progress;
+    const car=vehicle.localToWorld(new THREE.Vector3(0,1.1,0));
+    const person=contact.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,.6,0));
+    const focus=car.clone().lerp(person,.5),direction=new THREE.Vector3(Math.sin(angle),.50,Math.cos(angle)).normalize();
+    camera.fov=55;camera.updateProjectionMatrix();
+    const half=THREE.MathUtils.degToRad(camera.fov/2),right=new THREE.Vector3(0,1,0).cross(direction).normalize(),up=direction.clone().cross(right);
+    const points=[];
+    for(const object of [vehicle,vegetation,contact]){const box=new THREE.Box3().setFromObject(object);for(const x of [box.min.x,box.max.x])for(const y of [box.min.y,box.max.y])for(const z of [box.min.z,box.max.z])points.push(new THREE.Vector3(x,y,z));}
+    let distance=10;
+    for(const point of points){const delta=point.sub(focus);distance=Math.max(distance,delta.dot(direction)+Math.abs(delta.dot(right))/Math.tan(half)/camera.aspect*1.18,delta.dot(direction)+Math.abs(delta.dot(up))/Math.tan(half)*1.18);}
+    camera.position.copy(focus).addScaledVector(direction,distance);camera.lookAt(focus);
+    el.entryFade.style.opacity=String(phaseEase((patrolFinaleTime-3.65)/.35));
+    if(patrolFinaleTime>=4)completeScenario();
+  }
+
   function completeScenario() {
     setState(STATES.COMPLETE);vehicleSpeed=0;driverSpeedTarget=0;
     expandedDialog.close();el.entryFade.style.opacity='0';
     const summary=document.getElementById('completionSummary');summary.replaceChildren();
-    const lines=['Person detected and observed','Patrol resumed · PTZ scanning'];
+    const lines=['Person detected and observed',patrolFinaleTime!==null?'Exterior review complete · vehicle remained stopped':'Patrol resumed · PTZ scanning'];
     if(eventClip.blob)lines.splice(1,0,'Activity clip recorded');
     lines.push(eventClip.status==='SIMULATED_SEND'?'Clip sent to command center — simulated':eventClip.status==='KEPT_LOCAL'?'Clip kept locally in this session':'Clip not transmitted');
     for(const text of lines){const item=document.createElement('li');item.textContent=text;summary.appendChild(item);}
@@ -2200,7 +2231,9 @@
     document.getElementById('replayScenario').focus();
   }
   document.getElementById('replayScenario').addEventListener('click',()=>{if(selectedScenario==='interception')sessionStorage.setItem('tactixReplay','interception');location.reload();});
+  document.addEventListener('visibilitychange',()=>window.TactixLaunchAudio?.setPaused(document.hidden));
   document.getElementById('exitScenario').addEventListener('click',async()=>{
+    window.TactixLaunchAudio?.stop();
     // Return to the start screen and leave immersive mode; never try to close a user-owned tab.
     if(document.fullscreenElement) {
       try { await document.exitFullscreen(); } catch (_) { /* Navigation still exits the scenario. */ }
@@ -2420,6 +2453,7 @@
     scene.updateMatrixWorld(true);
     if(!debugPaused && [STATES.LAUNCH_READY,STATES.VEHICLE_FIRST_PERSON,STATES.PATROL,STATES.CONTACT,STATES.INSPECTING,STATES.TRACKING,STATES.DISMISSED].includes(state)) updateOperatorCamera(now);
     if(!debugPaused && state===STATES.LAUNCHING)updateLaunch(elapsed);
+    if(!debugPaused && state===STATES.PATROL_FINALE)updatePatrolFinale(elapsed);
     if(state===STATES.LAUNCHING)el.viewToggle.hidden=true;
     updateDebugVisualization();
     updateDebugCamera();
