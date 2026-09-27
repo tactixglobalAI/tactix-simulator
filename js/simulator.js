@@ -158,6 +158,7 @@
   let wheelTravel=0;
   let driverSpeedTarget=5;
   let officerSlowAt=null,officerSlowPending=false;
+  let observationPhase="NONE", resumeLookTime=0, manualLookUntil=0, screenAttention=false;
   let originalSpeedometer=null;
   const eventClip={status:"IDLE",sentAt:null,sendStarted:0,blob:null,url:null,recorder:null,stream:null,started:0,lastFrame:0,timer:null,frames:0,error:null};
   let recordingCanvas=null,recordingContext=null,recordingPixels=null,recordingImage=null;
@@ -1070,7 +1071,20 @@
     setMessage(speed===0?'Driver applied the brake.':speed<PATROL_SPEED?'Driver selected slow patrol.':'Driver resumed patrol speed.',false);
   }
 
+  function proceedPatrol() {
+    if(observationPhase!=='OBSERVING')return;
+    observationPhase='RESUMING';resumeLookTime=0;manualLookUntil=0;
+    expandedDialog.close();
+    setMessage('Officer returning attention to the road. Resuming patrol.',false);
+  }
+
   function touchscreenControls() {
+    const buttons=touchscreenBaseControls();
+    if(observationPhase==='OBSERVING')buttons.push({x:24,w:672,y:340,h:48,label:'PROCEED WITH PATROL',action:proceedPatrol});
+    return buttons;
+  }
+
+  function touchscreenBaseControls() {
     if(state===STATES.VEHICLE_FIRST_PERSON) return [{x:24,w:672,label:'BEGIN PATROL',action:beginPatrol}];
     if(!seatedStates.includes(state))return [];
     if(eventClip.status==='READY')return [
@@ -1094,7 +1108,7 @@
   function renderTouchscreen() {
     if(!touchscreenUI)return;
     const ui=touchscreenUI,ctx=ui.context;
-    const label=[state,manualPtz,eventClip.status,driverSpeedTarget,sensorVisible,sensorThermal,Math.round(vehicleSpeed*3.6).toString(),el.message.textContent].join('|');
+    const label=[state,observationPhase,manualPtz,eventClip.status,driverSpeedTarget,sensorVisible,sensorThermal,Math.round(vehicleSpeed*3.6).toString(),el.message.textContent].join('|');
     if(label!==ui.lastLabel) {
       ui.lastLabel=label;
       ctx.fillStyle='#07121b';ctx.fillRect(0,0,720,480);
@@ -1112,11 +1126,13 @@
       }
       for(const button of touchscreenControls()) {
         ctx.fillStyle='#203e52';ctx.fillRect(button.x,button.y??400,button.w,button.h??72);
-        ctx.fillStyle='#e3f1f8';ctx.font='bold 28px monospace';ctx.textAlign='center';ctx.fillText(button.label,button.x+button.w/2,(button.y??400)+(button.h??72)/2+10);ctx.textAlign='left';
+        ctx.fillStyle='#e3f1f8';ctx.font=(button.h?'bold 23px monospace':'bold 28px monospace');ctx.textAlign='center';ctx.fillText(button.label,button.x+button.w/2,(button.y??400)+(button.h??72)/2+10);ctx.textAlign='left';
       }
       ui.texture.needsUpdate=true;
     }
     ui.feed.visible=sensorVisible;
+    const observing=observationPhase==='OBSERVING';
+    ui.feed.scale.setScalar(observing?.78:1);ui.feed.position.y=observing?273:239;
     renderer.setRenderTarget(ui.target);renderer.render(ui.scene,ui.camera);renderer.setRenderTarget(null);
   }
 
@@ -1152,7 +1168,7 @@
     const labels={READY:'Send the recorded clip to command center?',TRANSMITTING:'Transmitting clip… · Simulated transmission',SIMULATED_SEND:'✓ Clip transmitted to command center · '+eventClip.sentAt+' · Simulated transmission',KEPT_LOCAL:'Clip kept in this session. SAVE CLIP to retain it.',RECORDING:'Recording activity clip…',ERROR:'Clip recording failed.',UNAVAILABLE:'Video recording is unavailable in this browser.'};
     const buttons=touchscreenControls();
     const label=buttons.map(b=>b.label).join('|');
-    document.getElementById('expandedStatus').textContent=Math.round(vehicleSpeed*3.6).toString()+' km/h · '+(labels[eventClip.status]||el.message.textContent);
+    document.getElementById('expandedStatus').textContent=Math.round(vehicleSpeed*3.6).toString()+' km/h · '+(observationPhase==='OBSERVING'?'Stopped · observing person. ':'')+(labels[eventClip.status]||el.message.textContent);
     if(label!==expandedLabel) {
       expandedLabel=label;
       const controls=document.getElementById('expandedControls');controls.replaceChildren();
@@ -1471,7 +1487,7 @@
   el.enter.addEventListener("click", beginIntro);
   function beginPatrol() {
     if (state !== STATES.VEHICLE_FIRST_PERSON && state !== STATES.DISMISSED) return;
-    driverSpeedTarget=PATROL_SPEED;officerSlowPending=false;officerSlowAt=null;
+    driverSpeedTarget=PATROL_SPEED;officerSlowPending=false;officerSlowAt=null;observationPhase="NONE";
     patrolStartedAt = performance.now();
     contactTriggered = false;
     updateNpc(0);
@@ -1517,6 +1533,7 @@
       exteriorYaw-=dx*.005;
       exteriorElevation=THREE.MathUtils.clamp(exteriorElevation+dy*.004,.20,.85);
     } else {
+      manualLookUntil=patrolElapsed+5;
       yaw=THREE.MathUtils.clamp(yaw-dx*.0032,-1.35,1.35);
       pitch=THREE.MathUtils.clamp(pitch-dy*.0027,-.55,.48);
     }
@@ -1589,7 +1606,7 @@
       const pixels=new Uint8Array(4);renderer.readRenderTargetPixels(touchscreenUI.target,650,34,1,1,pixels);
       return {pixelRatio:renderer.getPixelRatio(),buttonPixel:Array.from(pixels),screenSize:[touchscreenUI.target.width,touchscreenUI.target.height]};
     },
-    speedometerSnapshot() {return {value:originalSpeedometer?.last,extraDisplayVisible:cockpit?.getObjectByName("InstrumentClusterSurface")?.visible,officerSlowPending,officerSlowAt};},
+    speedometerSnapshot() {return {observationPhase,yaw,pitch,value:originalSpeedometer?.last,extraDisplayVisible:cockpit?.getObjectByName("InstrumentClusterSurface")?.visible,officerSlowPending,officerSlowAt};},
     eventSnapshot() {return {status:eventClip.status,sentAt:eventClip.sentAt,sendStarted:eventClip.sendStarted,bytes:eventClip.blob?.size||0,url:eventClip.url,frames:eventClip.frames,error:eventClip.error,driverSpeedTarget,vehicleSpeed};},
     driverSpeed(speed) {if(debugEntry && [0,OBSERVATION_SPEED,PATROL_SPEED].includes(speed))setDriverSpeed(speed);},
     clipChoice(choice) {if(!debugEntry)return;if(choice==='SEND')simulateClipSend();if(choice==='KEEP' && eventClip.status==='READY')eventClip.status='KEPT_LOCAL';},
@@ -1857,14 +1874,44 @@
     camera.rotation.z = 0;
   }
 
+  function updateDriverAttention(dt) {
+    if(!operatorEye || patrolElapsed<manualLookUntil || pointerDown)return;
+    let targetYaw=null,targetPitch=-.10;
+    if(expandedDialog.open && touchscreenSurface) {
+      screenAttention=true;
+      const offset=touchscreenSurface.getWorldPosition(new THREE.Vector3()).sub(operatorEye.getWorldPosition(new THREE.Vector3()));
+      targetYaw=Math.atan2(-offset.x,-offset.z);
+      targetPitch=Math.atan2(offset.y,Math.hypot(offset.x,offset.z));
+    } else if(['STOPPING','OBSERVING'].includes(observationPhase)) {
+      const offset=contact.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,.95,0)).sub(operatorEye.getWorldPosition(new THREE.Vector3()));
+      targetYaw=Math.atan2(-offset.x,-offset.z);
+      targetPitch=Math.atan2(offset.y,Math.hypot(offset.x,offset.z));
+    } else if(observationPhase==='RESUMING' || screenAttention){targetYaw=.22;if(Math.abs(yaw-.22)<.01)screenAttention=false;}
+    if(targetYaw===null)return;
+    targetYaw=THREE.MathUtils.clamp(targetYaw,-1.05,1.05);
+    targetPitch=THREE.MathUtils.clamp(targetPitch,-.5,.35);
+    const step=1-Math.exp(-dt*3);
+    yaw+=THREE.MathUtils.clamp((targetYaw-yaw)*step,-dt*.65,dt*.65);
+    pitch+=THREE.MathUtils.clamp((targetPitch-pitch)*step,-dt*.45,dt*.45);
+  }
+
   function updatePatrolVehicle(dt) {
     if(![STATES.PATROL,STATES.CONTACT,STATES.INSPECTING,STATES.TRACKING,STATES.DISMISSED].includes(state)) return;
     patrolElapsed+=dt;
     contact.visible=patrolElapsed>=ENCOUNTER_DELAY;
     if(officerSlowPending && patrolElapsed>=officerSlowAt) {
-      officerSlowPending=false;officerSlowAt=null;driverSpeedTarget=OBSERVATION_SPEED;
-      setMessage('Officer responding: slowing patrol.',false);
+      officerSlowPending=false;officerSlowAt=null;driverSpeedTarget=0;observationPhase="STOPPING";
+      setMessage('Officer slowing to a stop to observe the person.',false);
     }
+    if(observationPhase==='STOPPING' && vehicleSpeed<.01) {
+      observationPhase='OBSERVING';
+      setMessage('Stopped to observe the person. Select Proceed with Patrol when ready.',false);
+    }
+    if(observationPhase==='RESUMING') {
+      resumeLookTime+=dt;
+      if(resumeLookTime>=1.5 && Math.abs(yaw-.22)<.04){observationPhase='NONE';driverSpeedTarget=PATROL_SPEED;}
+    }
+    updateDriverAttention(dt);
     const targetSpeed=driverSpeedTarget;
     const previousSpeed=vehicleSpeed;
     vehicleSpeed=THREE.MathUtils.clamp(targetSpeed,Math.max(0,vehicleSpeed-1.1*dt),vehicleSpeed+1.4*dt);
@@ -1874,7 +1921,7 @@
     rollingWheels.forEach(({pivot,radius})=>{pivot.rotation.x=-wheelTravel/radius;});
 
     el.speed.textContent=Math.round(vehicleSpeed*3.6).toString()+' km/h';
-    el.driveMode.textContent=driverSpeedTarget===0?'DRIVER BRAKING':driverSpeedTarget<PATROL_SPEED?'DRIVER SLOW':'DRIVER PATROL';
+    el.driveMode.textContent=driverSpeedTarget===0?(vehicleSpeed<.01?'STOPPED · OBSERVING':'DRIVER BRAKING'):driverSpeedTarget<PATROL_SPEED?'DRIVER SLOW':'DRIVER PATROL';
   }
 
   function ptzOrigin() {
