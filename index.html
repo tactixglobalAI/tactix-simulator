@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>TactixGlobal · Operator Simulator</title>
-  <link rel="stylesheet" href="styles.css?v=mobile-display-2">
+  <link rel="stylesheet" href="styles.css?v=clock-manual-1">
 </head>
 <body>
   <header class="topbar">
@@ -29,6 +29,17 @@
       <header><strong>SENTRY ONE PTZ</strong><button id="closeTouchscreen" type="button" aria-label="Close touchscreen">CLOSE</button></header>
       <p id="expandedStatus" role="status"></p>
       <canvas id="expandedFeed" width="512" height="288" aria-label="Live PTZ video"></canvas>
+      <button id="manualPtzButton" type="button" aria-pressed="false">MANUAL PTZ</button>
+      <div id="manualPtzControls" hidden>
+        <div class="ptz-pad" aria-label="Manual camera controls">
+          <button type="button" data-ptz-pan="-1" data-ptz-tilt="0" aria-label="Pan left">←</button>
+          <button type="button" data-ptz-pan="0" data-ptz-tilt="1" aria-label="Tilt up">↑</button>
+          <button type="button" data-ptz-pan="0" data-ptz-tilt="-1" aria-label="Tilt down">↓</button>
+          <button type="button" data-ptz-pan="1" data-ptz-tilt="0" aria-label="Pan right">→</button>
+        </div>
+        <p id="manualPtzBearing" aria-live="polite"></p>
+        <small>Tap arrows to aim. Auto resumes tracking or scanning.</small>
+      </div>
       <div id="expandedControls" class="expanded-controls"></div>
       <small>Vehicle touchscreen · command-center transmission is simulated</small>
     </dialog>
@@ -109,6 +120,6 @@
 
   <script src="vendor/three-0.128.0/three.min.js"></script>
   <script src="vendor/three-0.128.0/GLTFLoader.js"></script>
-  <script src="js/simulator.js?v=mobile-display-2"></script>
+  <script src="js/simulator.js?v=clock-manual-1"></script>
 </body>
 </html>

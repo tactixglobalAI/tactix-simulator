@@ -23,3 +23,5 @@ First use downloads the model, stock voice, and English language dependencies. U
 The browser decodes clips after user interaction. New messages interrupt earlier narration; unavailable audio leaves the on-screen message visible. New dialogue requires regeneration. Spoken dialogue uses conversational wording while on-screen text stays concise.
 
 Store the script, manifest, and MP3s in GitHub. Download weights from upstream during development. GitHub Pages serves the audio; it does not run Python inference.
+
+Clock alerts: twelve vehicle-relative directions use the same bundled Kokoro voice. Each contact clip records its own slowdown cue in `slowdown_seconds`, preserving the pause before and after “Slow down.” No runtime speech service is required.

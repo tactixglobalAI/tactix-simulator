@@ -177,7 +177,7 @@
   let narrationPlayed = 0;
   let narrationError = null;
   const narrationBuffers = new Map();
-  const narrationManifest = fetch('assets/audio/narration/manifest.json?v=kokoro-8')
+  const narrationManifest = fetch('assets/audio/narration/manifest.json?v=clock-1')
     .then(response => { if (!response.ok) throw new Error('Narration manifest unavailable'); return response.json(); })
     .catch(error => { narrationError = error.message; return { clips: {} }; });
   let officerLoaded = false;
@@ -334,6 +334,7 @@
   const PATROL_SPEED = 5; // metres/second = 18 km/h
   const OBSERVATION_SPEED = 5 / 3.6; // officer slows to 5 km/h
   const SCAN_RATE = Math.PI / 10; // slow survey: one revolution every 20 seconds
+  let manualPtz=false, manualPan=0, manualTilt=0;
   let scanAngle = 0, scanElapsed = 0, detectionEvidence = null;
   let vehicleSpeed = 0, patrolElapsed = 0;
   const ENCOUNTER_DELAY = 5;
@@ -626,7 +627,7 @@
     };
     narrationSource = source;
     narrationActiveText=text;
-    if(text.includes("Slow down.") && officerSlowPending)officerSlowAt=patrolElapsed+7.25;
+    if(text.includes("Slow down.") && officerSlowPending)officerSlowAt=patrolElapsed+(clip.slowdown_seconds ?? 7.25);
     source.start();
     narrationPlayed += 1;
   }
@@ -1093,12 +1094,12 @@
   function renderTouchscreen() {
     if(!touchscreenUI)return;
     const ui=touchscreenUI,ctx=ui.context;
-    const label=[state,eventClip.status,driverSpeedTarget,sensorVisible,sensorThermal,Math.round(vehicleSpeed*3.6).toString(),el.message.textContent].join('|');
+    const label=[state,manualPtz,eventClip.status,driverSpeedTarget,sensorVisible,sensorThermal,Math.round(vehicleSpeed*3.6).toString(),el.message.textContent].join('|');
     if(label!==ui.lastLabel) {
       ui.lastLabel=label;
       ctx.fillStyle='#07121b';ctx.fillRect(0,0,720,480);
       ctx.fillStyle='#b9d8e9';ctx.font='bold 30px monospace';ctx.fillText('SENTRY ONE PTZ',24,34);
-      ctx.fillStyle=ptzHolding()?'#efb94f':'#72d6ad';ctx.font='20px monospace';ctx.fillText(ptzHolding()?'PERSON · UNCONFIRMED':state===STATES.PATROL?'360° SCANNING':'STANDBY',420,31);
+      ctx.fillStyle=ptzHolding()?'#efb94f':'#72d6ad';ctx.font='20px monospace';ctx.fillText(manualPtz?'MANUAL PTZ':ptzHolding()?'PERSON · UNCONFIRMED':state===STATES.PATROL?'360° SCANNING':'STANDBY',420,31);
       ctx.fillStyle='#99adbc';ctx.font='20px monospace';
       ctx.fillText(Math.round(vehicleSpeed*3.6).toString()+' km/h · '+(ptzHolding()?'CROUCHING / PARTLY CONCEALED':state===STATES.DISMISSED?'DISMISSED · SCAN RESUMED':'VISIBLE + THERMAL ONLINE'),24,61);
       ctx.fillStyle=eventClip.status==='RECORDING'?'#ffb45a':'#b9d8e9';ctx.font='18px monospace';
@@ -1128,9 +1129,26 @@
   let expandedLastFrame=0,expandedLabel='';
   expandedButton.addEventListener('click',()=>{prepareNarration();expandedDialog.showModal();expandedLabel='';});
   document.getElementById('closeTouchscreen').addEventListener('click',()=>expandedDialog.close());
+  const manualButton=document.getElementById('manualPtzButton');
+  const manualControls=document.getElementById('manualPtzControls');
+  manualButton.addEventListener('click',()=>{
+    manualPtz=!manualPtz;
+    if(manualPtz){manualPan=-(ptzPan?.rotation.y||0);manualTilt=ptzTilt?.rotation.x||0;sensorVisible=true;}
+    else scanAngle=manualPan;
+  });
+  document.querySelectorAll('[data-ptz-pan]').forEach(button=>button.addEventListener('click',()=>{
+    manualPan=THREE.MathUtils.euclideanModulo(manualPan+Number(button.dataset.ptzPan)*Math.PI/18,Math.PI*2);
+    manualTilt=THREE.MathUtils.clamp(manualTilt+Number(button.dataset.ptzTilt)*Math.PI/36,-Math.PI/3,Math.PI/3);
+    updateSensorCamera();
+  }));
   function updateExpandedTouchscreen(now) {
     expandedButton.hidden=!seatedStates.includes(state);
     if(!expandedDialog.open)return;
+    manualButton.hidden=state===STATES.VEHICLE_FIRST_PERSON;
+    manualButton.textContent=manualPtz?'AUTO PTZ':'MANUAL PTZ';
+    manualButton.setAttribute('aria-pressed',String(manualPtz));
+    manualControls.hidden=!manualPtz;
+    document.getElementById('manualPtzBearing').textContent=`Pan ${Math.round(THREE.MathUtils.euclideanModulo(manualPan*180/Math.PI,360))}° · Tilt ${Math.round(manualTilt*180/Math.PI)}°`;
     const labels={READY:'Send the recorded clip to command center?',TRANSMITTING:'Transmitting clip… · Simulated transmission',SIMULATED_SEND:'✓ Clip transmitted to command center · '+eventClip.sentAt+' · Simulated transmission',KEPT_LOCAL:'Clip kept in this session. SAVE CLIP to retain it.',RECORDING:'Recording activity clip…',ERROR:'Clip recording failed.',UNAVAILABLE:'Video recording is unavailable in this browser.'};
     const buttons=touchscreenControls();
     const label=buttons.map(b=>b.label).join('|');
@@ -1165,8 +1183,7 @@
     const x=hit.uv.x*720,y=hit.uv.y*480;
     const button=touchscreenControls().find(b=>x>=b.x && x<=b.x+b.w && y>=(b.y??400) && y<=(b.y??400)+(b.h??72));
     if(!button) {
-      if(event.pointerType==='touch') {prepareNarration();expandedDialog.showModal();expandedLabel='';return true;}
-      return false;
+      prepareNarration();expandedDialog.showModal();expandedLabel='';return true;
     }
     prepareNarration();button.action();return true;
   }
@@ -1396,7 +1413,13 @@
     officerSlowPending=true;officerSlowAt=patrolElapsed+7.25;
     startEventRecording();
     alertTone();
-    setMessage("Sentry One PTZ detected a person ahead on the right. Auto-tracking and recording. Slow down. Crouching behind vegetation, intent unconfirmed.", true);
+    const localContact=vehicle.worldToLocal(contact.getWorldPosition(new THREE.Vector3()));
+    const hour=((Math.round(Math.atan2(localContact.x,-localContact.z)/(Math.PI/6))%12)+12)%12;
+    const word=['twelve','one','two','three','four','five','six','seven','eight','nine','ten','eleven'][hour];
+    const announcement=`Sentry One PTZ. Person detected at your ${word} o'clock. Tracking and recording. Slow down.`;
+    const detectedAt=patrolElapsed;
+    narrationManifest.then(manifest=>{if(officerSlowPending)officerSlowAt=detectedAt+(manifest.clips[announcement]?.slowdown_seconds ?? 9);});
+    setMessage(announcement,true);
   }
 
   function openThermal() {
@@ -1413,6 +1436,7 @@
   }
 
   function trackContact() {
+    manualPtz=false;
     sensorVisible = true;
     el.sensor.hidden = true;
     setState(STATES.TRACKING);
@@ -1425,6 +1449,7 @@
   }
 
   function dismissContact() {
+    manualPtz=false;
     sensorVisible = false;
     el.sensor.hidden = true;
     el.alert.hidden = true;
@@ -1450,7 +1475,7 @@
     patrolStartedAt = performance.now();
     contactTriggered = false;
     updateNpc(0);
-    scanAngle=SCAN_START_ANGLE;scanElapsed=0;detectionEvidence=null;vehicleSpeed=0;patrolElapsed=0;contact.visible=false;
+    manualPtz=false;scanAngle=SCAN_START_ANGLE;scanElapsed=0;detectionEvidence=null;vehicleSpeed=0;patrolElapsed=0;contact.visible=false;
     sensorVisible=true;sensorThermal=false;el.sensor.hidden=true;
     el.sensorTarget.textContent="360° SCAN";el.sensorMode.textContent="VISIBLE";
     el.patrol.disabled = true;
@@ -1860,23 +1885,25 @@
   function ptzTarget() { return contact.position.clone().add(new THREE.Vector3(0,1.10,0)); }
 
   function ptzHolding() {
-    return [STATES.TRACKING,STATES.CONTACT,STATES.INSPECTING].includes(state);
+    return !manualPtz && [STATES.TRACKING,STATES.CONTACT,STATES.INSPECTING].includes(state);
   }
 
   function updatePtzScan(dt) {
     if(![STATES.PATROL,STATES.CONTACT,STATES.INSPECTING,STATES.TRACKING,STATES.DISMISSED].includes(state)) return;
-    if(!ptzHolding()) { scanElapsed+=dt;scanAngle=(scanAngle+dt*SCAN_RATE)%(Math.PI*2); }
+    if(!manualPtz && !ptzHolding()) { scanElapsed+=dt;scanAngle=(scanAngle+dt*SCAN_RATE)%(Math.PI*2); }
     if(state!==STATES.PATROL || contactTriggered || !npcLoaded || patrolElapsed<ENCOUNTER_DELAY) return;
     const origin=ptzOrigin(),target=ptzTarget(),offset=target.clone().sub(origin);
     const range=offset.length();
     const bearing=Math.atan2(offset.x,-offset.z);
-    const error=Math.atan2(Math.sin(bearing-scanAngle),Math.cos(bearing-scanAngle));
+    const aimAngle=manualPtz?manualPan:scanAngle;
+    const error=Math.atan2(Math.sin(bearing-aimAngle),Math.cos(bearing-aimAngle));
+    const elevationError=manualPtz?Math.atan2(offset.y,Math.hypot(offset.x,offset.z))-manualTilt:0;
     // Acquire only an exposed upper-body sample inside the live scan cone.
     const ray=new THREE.Raycaster(origin,offset.clone().normalize(),0,range-.05);
     const occluded=ray.intersectObject(vegetation,true).length>0;
-    if(range<=60 && Math.abs(error)<=THREE.MathUtils.degToRad(14) && !occluded) {
+    if(range<=60 && Math.abs(error)<=THREE.MathUtils.degToRad(14) && Math.abs(elevationError)<=THREE.MathUtils.degToRad(14) && !occluded) {
       detectionEvidence={range,bearing,scanAngle,error,vehicleZ:vehicle.position.z,targetZ:target.z,scanElapsed,occluded};
-      showContact();
+      manualPtz=false;showContact();
     }
   }
 
@@ -1892,7 +1919,7 @@
           roofHardware.updateMatrixWorld(true);
         }
       } else {
-        ptzPan.rotation.y=-scanAngle;ptzTilt.rotation.x=-Math.atan2(1.4,30);roofHardware.updateMatrixWorld(true);
+        ptzPan.rotation.y=-(manualPtz?manualPan:scanAngle);ptzTilt.rotation.x=manualPtz?manualTilt:-Math.atan2(1.4,30);roofHardware.updateMatrixWorld(true);
       }
     }
     const origin=ptzOrigin();sensorCamera.position.copy(origin);
@@ -1901,7 +1928,9 @@
       sensorCamera.lookAt(target);
     } else {
       sensorCamera.fov=32;
-      sensorCamera.lookAt(origin.clone().add(new THREE.Vector3(Math.sin(scanAngle)*30,-1.4,-Math.cos(scanAngle)*30)));
+      const pan=manualPtz?manualPan:scanAngle, tilt=manualPtz?manualTilt:-Math.atan2(1.4,30);
+      const direction=new THREE.Vector3(Math.sin(pan)*Math.cos(tilt),Math.sin(tilt),-Math.cos(pan)*Math.cos(tilt)).applyQuaternion(vehicle.getWorldQuaternion(new THREE.Quaternion()));
+      sensorCamera.lookAt(origin.clone().add(direction));
     }
     sensorCamera.updateProjectionMatrix();
   }
@@ -2002,7 +2031,7 @@
     if(!el.scanReadout.hidden) {
       const degrees=((THREE.MathUtils.radToDeg(-(ptzPan?.rotation.y || 0))%360)+360)%360;
       el.scanArrow.style.transform='rotate('+degrees+'deg)';
-      el.scanStatus.textContent=ptzHolding()?'PTZ TRACKING PERSON':state===STATES.VEHICLE_FIRST_PERSON?'PTZ STANDBY':'PTZ SCANNING 360°';
+      el.scanStatus.textContent=manualPtz?'PTZ MANUAL':ptzHolding()?'PTZ TRACKING PERSON':state===STATES.VEHICLE_FIRST_PERSON?'PTZ STANDBY':'PTZ SCANNING 360°';
       el.scanAngle.textContent=Math.round(degrees)+'° · VEHICLE RELATIVE';
     }
     drawDashDisplays(now);

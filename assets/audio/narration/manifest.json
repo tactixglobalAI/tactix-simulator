@@ -7,52 +7,130 @@
   "sample_rate": 24000,
   "clips": {
     "Operator seated. Start patrol when ready.": {
-      "file": "assets/audio/narration/seated.mp3?v=02d980e332af",
+      "file": "assets/audio/narration/seated.mp3?v=6111c6a0bfe3",
       "spoken_text": "You’re in. Start the patrol when you’re ready.",
       "seconds": 2.95,
-      "sha256": "02d980e332afc408f9a466c6c6c6eed303f4e953143bda9a5e9d2d0c53940b76"
+      "sha256": "6111c6a0bfe3df87598fee7797f011dea855929f5b1853a51a49a9cec53f7056"
     },
     "Night patrol active. Sentry One PTZ is scanning in visible and thermal bands.": {
-      "file": "assets/audio/narration/patrol.mp3?v=01a2858022c5",
+      "file": "assets/audio/narration/patrol.mp3?v=360a8e6eed5f",
       "spoken_text": "Night patrol is active. Sentry One P T Z is scanning in visible and thermal bands.",
       "seconds": 6.05,
-      "sha256": "01a2858022c5fc236df87b54f4fff9ef5d39bc36a828de24ab6ee1ba726b89e8"
-    },
-    "Sentry One PTZ detected a person ahead on the right. Auto-tracking and recording. Slow down. Crouching behind vegetation, intent unconfirmed.": {
-      "file": "assets/audio/narration/contact.mp3?v=510ae13836f8",
-      "spoken_text": "Sentry One P T Z. Person detected ahead right. Tracking and recording. Slow down.",
-      "seconds": 8.75,
-      "sha256": "510ae13836f8aa5f7340fcfbaa67fcd30ad446425f8e90e6bbc7e57b1481d6cd"
+      "sha256": "360a8e6eed5f3d8dc08093eb66aac629d7b6199ea5a3e197aa50c9f1b46533ae"
     },
     "Sentry One PTZ. Clip transmitted successfully to command center.": {
-      "file": "assets/audio/narration/clip_sent.mp3?v=8a8b9b5852fd",
+      "file": "assets/audio/narration/clip_sent.mp3?v=baa3b7b20ab4",
       "spoken_text": "Sentry One P T Z. Clip transmitted successfully to command centre.",
       "seconds": 5.125,
-      "sha256": "8a8b9b5852fd2112427b12523fdc9e79b599f1083086fce42553993223c5cd73"
+      "sha256": "baa3b7b20ab43ee07f8f8b519f34bdb60755f3661b0f25fdec107aa787d386b0"
     },
     "Activity clip recorded. Send the clip to the command center?": {
-      "file": "assets/audio/narration/clip_ready.mp3?v=e40f839d5ed2",
+      "file": "assets/audio/narration/clip_ready.mp3?v=f5b41fb228e1",
       "spoken_text": "The activity clip has been recorded. Would you like to send it to the command centre?",
       "seconds": 5.425,
-      "sha256": "e40f839d5ed2e33fce21ee3c7d3b464bb6c0664af627521108208164a941caca"
+      "sha256": "f5b41fb228e10b3ad1cf71785a48e83cfb3381b71ff809db2f44c20a5540121d"
     },
     "Sentry One PTZ thermal is now displayed on the center console. Classification remains provisional.": {
-      "file": "assets/audio/narration/thermal.mp3?v=875a577f23de",
+      "file": "assets/audio/narration/thermal.mp3?v=0bbafc426224",
       "spoken_text": "The Sentry One P T Z thermal feed is on the centre console. The classification is still provisional.",
       "seconds": 6.8,
-      "sha256": "875a577f23dead0d41da09b77789013587e053096c8c626b431b19e40678d78f"
+      "sha256": "0bbafc4262243bc36d198e2fe1e3566c772b2443e1ae7553fd823ec9a95358c5"
     },
     "Tracking is active on the center console. No hostile action has been inferred.": {
-      "file": "assets/audio/narration/tracking.mp3?v=7aa291c1702b",
+      "file": "assets/audio/narration/tracking.mp3?v=c2ca8bfd9251",
       "spoken_text": "Tracking is active. We haven’t identified any hostile action.",
       "seconds": 4.55,
-      "sha256": "7aa291c1702be2581a86c8678a843c1850902afe38bec03b6b63f2018882727c"
+      "sha256": "c2ca8bfd9251cd0bbeaa8ff133e2de0d195c0941c248766fff0808ee0390667e"
     },
     "Contact dismissed by the operator. Sentry One PTZ has resumed its scan.": {
-      "file": "assets/audio/narration/dismissed.mp3?v=a440fbb4b461",
+      "file": "assets/audio/narration/dismissed.mp3?v=74da43c1a143",
       "spoken_text": "Contact dismissed. Sentry One P T Z is scanning again.",
       "seconds": 4.525,
-      "sha256": "a440fbb4b461770c97dd807c0f4414cf3b516f9dbc6c03e437837510cb4065d1"
+      "sha256": "74da43c1a1438f6d6ad589941b7b22f5f8b6afa901c4a52cdd16bf133a2664af"
+    },
+    "Sentry One PTZ. Person detected at your twelve o'clock. Tracking and recording. Slow down.": {
+      "file": "assets/audio/narration/contact_12.mp3?v=5676851e62f0",
+      "spoken_text": "Sentry One P T Z. Person detected at your twelve o'clock. Tracking and recording. Slow down.",
+      "seconds": 9.25,
+      "sha256": "5676851e62f01290c7fb2d4a702ab45c874ceb71f0045e2b6fd5df666a494485",
+      "slowdown_seconds": 8.25
+    },
+    "Sentry One PTZ. Person detected at your one o'clock. Tracking and recording. Slow down.": {
+      "file": "assets/audio/narration/contact_1.mp3?v=438e58cb3eb3",
+      "spoken_text": "Sentry One P T Z. Person detected at your one o'clock. Tracking and recording. Slow down.",
+      "seconds": 9.15,
+      "sha256": "438e58cb3eb3e1cc3d78c6443e5e5026be76528fe73f2887b103ee9f3efac82a",
+      "slowdown_seconds": 8.15
+    },
+    "Sentry One PTZ. Person detected at your two o'clock. Tracking and recording. Slow down.": {
+      "file": "assets/audio/narration/contact_2.mp3?v=8ec998f235a4",
+      "spoken_text": "Sentry One P T Z. Person detected at your two o'clock. Tracking and recording. Slow down.",
+      "seconds": 9.225,
+      "sha256": "8ec998f235a4cad1f78259deb1bbf72a0f4291a75d20f3b5463322393722bd37",
+      "slowdown_seconds": 8.225
+    },
+    "Sentry One PTZ. Person detected at your three o'clock. Tracking and recording. Slow down.": {
+      "file": "assets/audio/narration/contact_3.mp3?v=7a42af531096",
+      "spoken_text": "Sentry One P T Z. Person detected at your three o'clock. Tracking and recording. Slow down.",
+      "seconds": 9.2,
+      "sha256": "7a42af5310967bfa091cfad81a73531c1cf86bfd308c0e6dc41fdae65574d8a4",
+      "slowdown_seconds": 8.2
+    },
+    "Sentry One PTZ. Person detected at your four o'clock. Tracking and recording. Slow down.": {
+      "file": "assets/audio/narration/contact_4.mp3?v=afa43ad3ee70",
+      "spoken_text": "Sentry One P T Z. Person detected at your four o'clock. Tracking and recording. Slow down.",
+      "seconds": 9.2,
+      "sha256": "afa43ad3ee70dc6482892d619b6c1a9e0b15cae19160b048dad3e545d5b70e66",
+      "slowdown_seconds": 8.2
+    },
+    "Sentry One PTZ. Person detected at your five o'clock. Tracking and recording. Slow down.": {
+      "file": "assets/audio/narration/contact_5.mp3?v=f4e1d072def1",
+      "spoken_text": "Sentry One P T Z. Person detected at your five o'clock. Tracking and recording. Slow down.",
+      "seconds": 9.225,
+      "sha256": "f4e1d072def1a1507b01becf3797c06853990e97f932c8d1274ba40b56492fc4",
+      "slowdown_seconds": 8.225
+    },
+    "Sentry One PTZ. Person detected at your six o'clock. Tracking and recording. Slow down.": {
+      "file": "assets/audio/narration/contact_6.mp3?v=82e4fb9690fe",
+      "spoken_text": "Sentry One P T Z. Person detected at your six o'clock. Tracking and recording. Slow down.",
+      "seconds": 9.225,
+      "sha256": "82e4fb9690fe1b2235b644e47a865aaecb0ca856d6a8b907e2bcc9c4515bc807",
+      "slowdown_seconds": 8.225
+    },
+    "Sentry One PTZ. Person detected at your seven o'clock. Tracking and recording. Slow down.": {
+      "file": "assets/audio/narration/contact_7.mp3?v=959a2eec226b",
+      "spoken_text": "Sentry One P T Z. Person detected at your seven o'clock. Tracking and recording. Slow down.",
+      "seconds": 9.225,
+      "sha256": "959a2eec226bcd17784169f5c5a0150e8520e533ebe620892f470ca0323067fd",
+      "slowdown_seconds": 8.225
+    },
+    "Sentry One PTZ. Person detected at your eight o'clock. Tracking and recording. Slow down.": {
+      "file": "assets/audio/narration/contact_8.mp3?v=88618f6074ba",
+      "spoken_text": "Sentry One P T Z. Person detected at your eight o'clock. Tracking and recording. Slow down.",
+      "seconds": 9.125,
+      "sha256": "88618f6074ba3e91e8b82c54c435c90b2b3ffb207cf699a039eb572e495f858a",
+      "slowdown_seconds": 8.125
+    },
+    "Sentry One PTZ. Person detected at your nine o'clock. Tracking and recording. Slow down.": {
+      "file": "assets/audio/narration/contact_9.mp3?v=95445d647d67",
+      "spoken_text": "Sentry One P T Z. Person detected at your nine o'clock. Tracking and recording. Slow down.",
+      "seconds": 9.075,
+      "sha256": "95445d647d67b4df235b11f29f5859aa614d535e6cf7814abfcee3c8813cd5fb",
+      "slowdown_seconds": 8.075
+    },
+    "Sentry One PTZ. Person detected at your ten o'clock. Tracking and recording. Slow down.": {
+      "file": "assets/audio/narration/contact_10.mp3?v=531d9f3430c2",
+      "spoken_text": "Sentry One P T Z. Person detected at your ten o'clock. Tracking and recording. Slow down.",
+      "seconds": 9.225,
+      "sha256": "531d9f3430c207c5b628534130fc171297d65659bcc4fb67c555a3b9801cf67a",
+      "slowdown_seconds": 8.225
+    },
+    "Sentry One PTZ. Person detected at your eleven o'clock. Tracking and recording. Slow down.": {
+      "file": "assets/audio/narration/contact_11.mp3?v=19a69d883977",
+      "spoken_text": "Sentry One P T Z. Person detected at your eleven o'clock. Tracking and recording. Slow down.",
+      "seconds": 9.375,
+      "sha256": "19a69d883977b4b5b5919b5e01540c908124aaaf6dab0f740954383e509a1a7c",
+      "slowdown_seconds": 8.375
     }
   }
 }
