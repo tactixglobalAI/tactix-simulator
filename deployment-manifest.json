@@ -1,6 +1,7 @@
 {
   "files": {
     "THIRD_PARTY_NOTICES.md": "a2255032c9259abd10c585b386952f0ac41240dc8be0d3612a7f797f63f51c2d",
+    "assets/animations/interceptor-launch.json": "ef211ba36bdd35b96d807bb669767dcde4fb0219fe2d955b692d8a80d1677be7",
     "assets/audio/narration/KOKORO-LICENSE.txt": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
     "assets/audio/narration/README.md": "abd7d9cc0cdda99f551651367c41d9ea44f737d9320eee6b8cb42df8690a1dfe",
     "assets/audio/narration/clip_ready.mp3": "201c7f061963cf1dce0e09417b9b09c5949fd02f6dc313c4578d8f2ebd6d0b9e",
@@ -25,15 +26,15 @@
     "assets/audio/narration/thermal.mp3": "87397f0bdbe8bdfa37be27203d64f895cf61c820c5b6bab70d8ea62fd6731a8b",
     "assets/audio/narration/tracking.mp3": "fd3f346af86adbac9341677b765a41a2e50771f8010c3afec1b147aba2be5a61",
     "assets/models/bolero_camper_simulator.glb": "2fb2d75ce40ec1304cf16e3dedce80d4457ef31493bf29c407d29ae7ee330af8",
-    "assets/models/hooded_npc.glb": "d5638dd6cf26feeb07b5535c617fc372d13074c07a32e49148fac6eff73d1e30",
+    "assets/models/hooded_npc.glb": "1f24600ff51fe539d16f218239c5967754cfb62bda95cb4b054b67fb93cc2046",
     "assets/models/interceptor_docked.glb": "14a95c96ed5c848d53047c587d17ff86d5c6cfb797e526aa8bcdd1bd859c6631",
     "assets/models/ptz_roof.glb": "2e874bf8114967baae333a16df478a4b12575ac2fc5223e52ab6c938cdd2e599",
     "assets/models/ptz_touchscreen_clean.glb": "05015947c6deaeddd070fd033f69c30dbb24e588428a65f66846f5145d1b03d3",
     "assets/models/roof_platform.glb": "57ee7579da03712dfb555a1844bfb9dec597568a3512b0d6e768450009f55d03",
     "assets/models/tactical_officer_rigged.glb": "81df701be03d02b3a65518bac853fa503019017cb09d6b14b69760f974d28484",
-    "index.html": "e89d1fb65b831d8de8a3d4dd250eb1539c8406891610ff66ac970f5c266931d8",
-    "js/simulator.js": "0d0be35594c662a890a0e2c0bc2958b6232b3e15dc9101a9e40e49628d2bfc18",
-    "styles.css": "c56aa6c991e29d9e61ec1a3f61af8901b9dadf187074229ec28d0d49783cb95a",
+    "index.html": "297b29c1d21d5750e0e8707a259080555a8dcdf91fa7750408fcf38ea23da5e8",
+    "js/simulator.js": "26bdec4d2b5d1e83c52ba41eb5d8d5172540f7e1974478effce75fac5a3dc60b",
+    "styles.css": "2470cb4a9f639f9c4587b88f334047fd4e9587f97cb394bf2d279c32d7ec16f0",
     "vendor/three-0.128.0/GLTFLoader.js": "5c15967ba830918a9caea6338712c994c354bccd4edc4569bde411c3ec06a3e6",
     "vendor/three-0.128.0/LICENSE": "7dddf7c5b8fd10ee654db8857d75d104b5557889aa5a91fc4ca545ea7c07062f",
     "vendor/three-0.128.0/three.min.js": "9274bbcec8d96168626c732b5d31c775aa8cfb7eaa0599bec0c175908a2c1ce2"

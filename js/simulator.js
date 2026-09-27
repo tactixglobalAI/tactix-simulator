@@ -4,7 +4,7 @@
   const ASSETS = Object.freeze({
     cockpit: "assets/models/bolero_camper_simulator.glb?v=6",
     officer: "assets/models/tactical_officer_rigged.glb?v=5",
-    npc: "assets/models/hooded_npc.glb?v=1",
+    npc: "assets/models/hooded_npc.glb?v=hedge-1",
     touchscreen: "assets/models/ptz_touchscreen_clean.glb?v=1",
     ptz: "assets/models/ptz_roof.glb?v=white-panels-1",
     roofPlatform: "assets/models/roof_platform.glb?v=1",
@@ -23,6 +23,8 @@
     CONTACT: "CONTACT DETECTED",
     INSPECTING: "INSPECTING CONTACT",
     TRACKING: "TRACKING CONTACT",
+    LAUNCH_READY: "LAUNCH REVIEW",
+    LAUNCHING: "INTERCEPTOR LAUNCH",
     COMPLETE: "SCENARIO COMPLETE",
     DISMISSED: "CONTACT DISMISSED"
   });
@@ -129,6 +131,7 @@
   let doorEntry = null;
   let entryDoor = null;
   let ptzMount = null;
+  let selectedScenario="patrol", launchData=null, launchFlight=null, launchRotors=[], launchTime=0, launchCount=0, aerialContact=null;
   let roofHardware=null, ptzPan=null, ptzTilt=null, ptzOptical=null, ptzRig=null, interceptorRig=null;
   const interactionTargets = {};
   const rigBones = {};
@@ -173,7 +176,7 @@
   let exteriorYaw = .65, exteriorElevation = .40;
   let exteriorManual=false, exteriorManualDistance=0, exteriorCameraReady=false, exteriorCameraTime=0;
   const exteriorFocus=new THREE.Vector3(),exteriorLastVehicle=new THREE.Vector3();
-  const seatedStates = [STATES.VEHICLE_FIRST_PERSON,STATES.PATROL,STATES.CONTACT,STATES.INSPECTING,STATES.TRACKING,STATES.DISMISSED];
+  const seatedStates = [STATES.LAUNCH_READY,STATES.LAUNCHING,STATES.VEHICLE_FIRST_PERSON,STATES.PATROL,STATES.CONTACT,STATES.INSPECTING,STATES.TRACKING,STATES.DISMISSED];
   let pointerDown = false;
   let lastPointer = { x: 0, y: 0 };
   let introCameraStart = new THREE.Vector3();
@@ -362,16 +365,33 @@
   vegetation.position.z=ENCOUNTER_Z;
   scene.add(vegetation);
   const bushMat = new THREE.MeshStandardMaterial({ color: 0x263e24, roughness: 1 });
-  // Road-side low cover hides the legs without surrounding or intersecting the body.
-  [[7.25,.55,.72],[7.35,-.35,.64],[8.65,-1,.85],[8.8,1.2,.75]].forEach(([x,z,h],i) => {
-    for (let j=0;j<3;j++) {
-      const bush = new THREE.Mesh(new THREE.IcosahedronGeometry(1,1),bushMat);
-      bush.scale.set(.43,.40+h*.16,.43);
-      bush.position.set(x+(j-1)*.23,h*.48+(j%2)*.15,z+(j%2)*.18);
-      bush.rotation.y=i+j*.8;
-      bush.castShadow=true; vegetation.add(bush);
+  // Reusable opaque foliage: the same leaf clusters occlude visible and thermal views.
+  // A roadside hedge and short return leave the garden side open for the exterior reveal.
+  const leafGeometry=new THREE.SphereGeometry(1,5,3);
+  const leafMaterials=[0x061309,0x0b2110,0x102b15,0x19361a].map(color=>new THREE.MeshStandardMaterial({color,roughness:1}));
+  let foliageSeed=417;
+  function foliageRandom(){foliageSeed=(foliageSeed*1664525+1013904223)>>>0;return foliageSeed/4294967296;}
+  function hedgeSection(x,z,length,alongZ=true){
+    const trunk=new THREE.Mesh(new THREE.BoxGeometry(alongZ?.16:length,.53,alongZ?length:.16),bushMat);
+    trunk.position.set(x,.27,z);vegetation.add(trunk);
+    for(let i=0;i<500;i++){
+      const along=(foliageRandom()-.5)*length,across=(foliageRandom()-.5)*.56;
+      const leaf=new THREE.Mesh(leafGeometry,leafMaterials[i%leafMaterials.length]);
+      leaf.position.set(x+(alongZ?across:along),.22+foliageRandom()*.73,z+(alongZ?along:across));
+      leaf.scale.set(.06+foliageRandom()*.055,.018+foliageRandom()*.018,.10+foliageRandom()*.08);
+      leaf.rotation.set(foliageRandom()*3,foliageRandom()*3,foliageRandom()*3);leaf.castShadow=true;vegetation.add(leaf);
     }
-  });
+  }
+  for(const z of [-1.65,-.55,.55,1.65])hedgeSection(7.05,z,1.12);
+  for(const x of [7.6,8.7,9.8])hedgeSection(x,-2.15,1.12,false);
+  // Batch leaf clusters into four draw calls; preserve real depth occlusion.
+  for(const material of leafMaterials){
+    const leaves=vegetation.children.filter(o=>o.material===material);
+    const batch=new THREE.InstancedMesh(leafGeometry,material,leaves.length);
+    leaves.forEach((leaf,i)=>{leaf.updateMatrix();batch.setMatrixAt(i,leaf.matrix);vegetation.remove(leaf);});
+    batch.castShadow=true;vegetation.add(batch);
+  }
+
 
   function loadNpc(done) {
     new THREE.GLTFLoader().load(ASSETS.npc, gltf => {
@@ -530,7 +550,7 @@
       ctx.fillStyle = "#659aca";
       ctx.font = "22px monospace";
       if (display.kind === "cluster") {
-        ctx.fillText("NIGHT PATROL", 28, 48);
+        ctx.fillText(selectedScenario==='interception'?"INTERCEPTOR":"NIGHT PATROL", 28, 48);
         ctx.fillStyle = "#e8f3ff";
         ctx.font = "bold 74px monospace";
         ctx.fillText(Math.round(vehicleSpeed*3.6).toString(), 32, 144);
@@ -1116,6 +1136,7 @@
 
   function touchscreenControls() {
     const buttons=touchscreenBaseControls();
+    if(selectedScenario==="interception")return buttons;
     if(seatedStates.includes(state) && state!==STATES.VEHICLE_FIRST_PERSON)buttons.push({x:438,w:258,y:8,h:48,label:manualPtz?'PTZ CONTROLS':'MANUAL PTZ',physicalOnly:true,action:()=>{
       expandedDialog.showModal();expandedLabel='';if(!manualPtz)manualButton.click();
     }});
@@ -1124,6 +1145,8 @@
   }
 
   function touchscreenBaseControls() {
+    if(state===STATES.LAUNCH_READY)return [{x:24,w:440,label:"AUTHORIZE LAUNCH",action:authorizeLaunch},{x:476,w:220,label:"EXIT",action:()=>location.reload()}];
+    if(state===STATES.LAUNCHING)return [];
     if(state===STATES.VEHICLE_FIRST_PERSON)return [];
     if(!seatedStates.includes(state))return [];
     if(eventClip.status==='READY')return [
@@ -1145,7 +1168,7 @@
   }
 
   function suggestedScreenAction(label) {
-    return ['SEND CLIP','KEEP LOCAL','PROCEED WITH PATROL'].includes(label);
+    return ['SEND CLIP','KEEP LOCAL','PROCEED WITH PATROL','AUTHORIZE LAUNCH'].includes(label);
   }
 
   function renderTouchscreen() {
@@ -1160,10 +1183,11 @@
       ctx.fillStyle='#b9d8e9';ctx.font='bold 30px monospace';ctx.fillText('SENTRY ONE PTZ',24,34);
       ctx.fillStyle=ptzHolding()?'#efb94f':'#72d6ad';ctx.font='20px monospace';if(state===STATES.VEHICLE_FIRST_PERSON)ctx.fillText('STANDBY',420,31);
       ctx.fillStyle='#99adbc';ctx.font='20px monospace';
-      ctx.fillText(Math.round(vehicleSpeed*3.6).toString()+' km/h · '+(ptzHolding()?'CROUCHING / PARTLY CONCEALED':state===STATES.DISMISSED?'DISMISSED · SCAN RESUMED':'VISIBLE + THERMAL ONLINE'),24,61);
+      ctx.fillText(Math.round(vehicleSpeed*3.6).toString()+' km/h · '+(selectedScenario==='interception'?'AERIAL CONTACT · UNCONFIRMED':ptzHolding()?'CROUCHING / PARTLY CONCEALED':state===STATES.DISMISSED?'DISMISSED · SCAN RESUMED':'VISIBLE + THERMAL ONLINE'),24,61);
       ctx.fillStyle=eventClip.status==='RECORDING'?'#ffb45a':'#b9d8e9';ctx.font='18px monospace';
       const recordingLabel={RECORDED:'CLIP RECORDED · OBSERVING PERSON',RECORDING:'● RECORDING ACTIVITY CLIP · 10 SECONDS',FINALIZING:'FINALIZING CLIP…',READY:'SEND CLIP TO COMMAND CENTER? · SIMULATED LINK',KEPT_LOCAL:'CLIP KEPT IN THIS SESSION · SAVE TO RETAIN',TRANSMITTING:'TRANSMITTING CLIP… · SIMULATED TRANSMISSION',SIMULATED_SEND:'✓ CLIP TRANSMITTED · '+eventClip.sentAt+' · SIMULATED',ERROR:'RECORDING FAILED',UNAVAILABLE:'RECORDING UNSUPPORTED IN THIS BROWSER'}[eventClip.status];
-      if(recordingLabel)ctx.fillText(recordingLabel,24,83);
+      if(selectedScenario==='interception')ctx.fillText(state===STATES.LAUNCH_READY?'PARKED · REVIEW CONTACT BEFORE LAUNCH':launchPhase(),24,83);
+      else if(recordingLabel)ctx.fillText(recordingLabel,24,83);
       if(!sensorVisible) {
         ctx.fillStyle='#b9d8e9';ctx.font='bold 32px monospace';ctx.textAlign='center';
         ctx.fillText(state===STATES.DISMISSED?'CONTACT DISMISSED':'OPERATOR SEATED',360,210);
@@ -1209,10 +1233,10 @@
     updateSensorCamera();
   }));
   function updateExpandedTouchscreen(now) {
-    expandedButton.hidden=!seatedStates.includes(state);
+    expandedButton.hidden=!seatedStates.includes(state) || state===STATES.LAUNCHING;
     expandedButton.classList.toggle('suggested-action',!expandedDialog.open && innerWidth<=900 && (eventClip.status==='READY' || observationPhase==='OBSERVING'));
     if(!expandedDialog.open)return;
-    manualButton.hidden=state===STATES.VEHICLE_FIRST_PERSON;
+    manualButton.hidden=state===STATES.VEHICLE_FIRST_PERSON || selectedScenario==='interception';
     manualButton.textContent=manualPtz?'AUTO PTZ':'MANUAL PTZ';
     manualButton.setAttribute('aria-pressed',String(manualPtz));
     manualControls.hidden=!manualPtz;
@@ -1328,7 +1352,10 @@
     el.lookHint.hidden = true;
     if (entryDoor) entryDoor.rotation.y = 0;
     el.enter.disabled = false;
-    el.enter.textContent = "START EXPERIENCE";
+    el.enter.textContent = "START PATROL";
+    document.getElementById("interceptionButton").disabled=false;
+    document.getElementById("interceptionButton").textContent="START INTERCEPTION";
+    if(sessionStorage.getItem("tactixReplay")==="interception"){sessionStorage.removeItem("tactixReplay");setTimeout(beginInterception,0);}
     characterController.vehicleCollision = true;
     characterController.cabinCollisionIgnored = false;
     operator.visible = true;
@@ -1350,6 +1377,7 @@
   function beginIntro() {
     if (state !== STATES.READY) return;
     prepareNarration();
+    document.getElementById("missionLabel").textContent="NIGHT PATROL";
     el.enter.disabled = true;
     el.startPanel.hidden = true;
     introCameraStart.copy(camera.position);
@@ -1541,7 +1569,72 @@
     setMessage("Contact dismissed by the operator. Sentry One PTZ has resumed its scan.", true);
   }
 
-  el.enter.addEventListener("click", beginIntro);
+  el.enter.addEventListener("click",()=>{selectedScenario="patrol";beginIntro();});
+  document.getElementById("interceptionButton").addEventListener("click",beginInterception);
+
+  async function beginInterception(){
+    if(state!==STATES.READY)return;
+    prepareNarration();
+    const button=document.getElementById('interceptionButton');button.disabled=true;el.enter.disabled=true;button.textContent='LOADING LAUNCH…';
+    try {
+      if(!launchData){const response=await fetch('assets/animations/interceptor-launch.json?v=1');if(!response.ok)throw new Error('Launch motion unavailable');launchData=await response.json();}
+      if(!launchFlight){
+        launchFlight=new THREE.Group();launchFlight.name='InterceptorLaunch';interceptorRig.add(launchFlight);interceptorRig.updateMatrixWorld(true);
+        const parts=[];interceptorRig.traverse(o=>{if(o.isMesh && !o.name.includes('FluxGrip'))parts.push(o);});
+        for(const part of parts)launchFlight.attach(part);
+        const normalized=name=>name.replace(/[^a-z0-9]/gi,'').toLowerCase();
+        for(const rotor of launchData.rotors){
+          const mesh=parts.find(o=>normalized(o.name)===normalized(rotor.mesh));if(!mesh)throw new Error('Rotor mesh missing: '+rotor.mesh);
+          const pivot=new THREE.Group();pivot.position.fromArray(rotor.pivot);launchFlight.add(pivot);pivot.updateMatrixWorld(true);pivot.attach(mesh);launchRotors.push(pivot);
+        }
+      }
+      selectedScenario='interception';launchTime=0;launchCount=0;el.startPanel.hidden=true;contact.visible=false;
+      vehicleSpeed=driverSpeedTarget=0;observationPhase='NONE';manualPtz=false;sensorVisible=true;sensorThermal=false;
+      enterOperatorMode();setState(STATES.LAUNCH_READY);yaw=.35;pitch=-.13;
+      if(!aerialContact){
+        aerialContact=new THREE.Group();aerialContact.name='UnconfirmedAerialContact';
+        const mat=new THREE.MeshStandardMaterial({color:0x32383c,roughness:.8});
+        const body=new THREE.Mesh(new THREE.BoxGeometry(.25,.13,.32),mat);aerialContact.add(body);
+        for(const angle of [-Math.PI/4,Math.PI/4]){const arm=new THREE.Mesh(new THREE.BoxGeometry(.9,.04,.04),mat);arm.rotation.y=angle;aerialContact.add(arm);}
+        for(const x of [-.3,.3])for(const z of [-.3,.3]){const rotor=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,.012,16),mat);rotor.position.set(x,.04,z);aerialContact.add(rotor);}
+        aerialContact.position.set(13,12,-35);scene.add(aerialContact);
+      }
+      aerialContact.visible=true;el.sentry.textContent='AERIAL CONTACT';
+      document.getElementById('missionLabel').textContent='INTERCEPTOR LAUNCH';
+      document.querySelector('.completion-card > p').textContent='TACTIXGLOBAL · INTERCEPTOR LAUNCH';
+      setMessage('Unconfirmed aerial contact. Vehicle parked. Review the live feed and authorize launch when ready.',false);
+      updateSensorCamera();updateOperatorCamera(performance.now());
+    } catch(error){console.error(error);button.textContent='RETRY INTERCEPTION';button.disabled=false;el.enter.disabled=false;}
+  }
+  function launchPhase(){
+    if(launchTime<3.5)return 'DOCKED';if(launchTime<4.6)return 'ROTOR START';if(launchTime<5)return 'LIFT FROM DOCK';if(launchTime<157/30)return 'CLEAR VEHICLE';if(launchTime<5.5)return 'STABILIZE';if(launchTime<6)return 'PITCH FOR TRAVEL';if(launchTime<7)return 'ACCELERATE AWAY';return 'CLIMB';
+  }
+  function authorizeLaunch(){
+    if(state!==STATES.LAUNCH_READY || !launchFlight)return;
+    launchCount++;launchTime=0;expandedDialog.close();setState(STATES.LAUNCHING);exteriorView=true;operator.visible=true;exteriorManual=false;
+    camera.position.copy(vehicle.position).add(camera.aspect<1?new THREE.Vector3(8,5.5,11):new THREE.Vector3(5,3.8,7));camera.lookAt(vehicle.position.clone().add(new THREE.Vector3(0,2,0)));
+    el.sentry.textContent='LAUNCH AUTHORIZED';setMessage('Launch authorized. Vehicle remains parked.',false);
+  }
+  function updateLaunch(dt){
+    launchTime=Math.min(launchTime+dt,launchData.duration+2);
+    const frame=Math.min(launchTime*launchData.fps,launchData.samples.length-1),i=Math.floor(frame),a=launchData.samples[i],b=launchData.samples[Math.min(i+1,launchData.samples.length-1)],u=frame-i;
+    launchFlight.position.fromArray(a.p).lerp(new THREE.Vector3().fromArray(b.p),u);
+    launchFlight.quaternion.fromArray(a.q).slerp(new THREE.Quaternion().fromArray(b.q),u);
+    launchRotors.forEach((r,n)=>r.rotation.y=THREE.MathUtils.lerp(a.rotors[n],b.rotors[n],u));
+    launchFlight.updateMatrixWorld(true);
+    const craft=launchFlight.getWorldPosition(new THREE.Vector3());
+    const aim=vehicle.position.clone().add(new THREE.Vector3(0,1.8,0)).lerp(craft,THREE.MathUtils.smoothstep(launchTime,4.6,6.5));
+    const desired=vehicle.position.clone().add(camera.aspect<1?new THREE.Vector3(8,5.5,11):new THREE.Vector3(5,3.8,7));
+    const blend=1-Math.exp(-dt*2);camera.position.lerp(desired,blend);camera.fov=THREE.MathUtils.lerp(camera.fov,camera.aspect<1?65:48,blend);camera.updateProjectionMatrix();camera.lookAt(aim);
+    el.message.textContent=launchPhase().replaceAll('_',' ');el.sentry.textContent=launchPhase();
+    if(launchTime>=launchData.duration+2){
+      setState(STATES.COMPLETE);document.getElementById('completionTitle').textContent='Launch demonstration complete';
+      const list=document.getElementById('completionSummary');list.replaceChildren();
+      for(const text of ['Launch authorized by operator','Vehicle remained stationary','Interceptor cleared roof hardware and climbed','Demonstration ended · interception outcome not simulated']){const li=document.createElement('li');li.textContent=text;list.appendChild(li);}
+      document.getElementById('viewRecordedClip').hidden=true;document.getElementById('completionPanel').hidden=false;document.getElementById('replayScenario').focus();
+    }
+  }
+
   function beginPatrol() {
     if (state !== STATES.VEHICLE_FIRST_PERSON && state !== STATES.DISMISSED) return;
     driverSpeedTarget=PATROL_SPEED;officerSlowPending=false;officerSlowAt=null;observationPhase="NONE";observationPlan=null;
@@ -1657,6 +1750,7 @@
   });
 
   window.__tactixEntryDebug = {
+    launchSnapshot(){return {scenario:selectedScenario,state,time:launchTime,phase:launchPhase(),count:launchCount,vehicle:vehicle.position.toArray(),flight:launchFlight?.position.toArray(),rotors:launchRotors.map(r=>r.rotation.y),scale:interceptorRig?.scale.toArray()};},
     patrolStep(dt, snapshot=true) {
       if(!debugEntry) return null;
       updatePatrolVehicle(dt);
@@ -1758,7 +1852,7 @@
     placeOfficer(localPosition) {
       if (!debugEntry) return false;
       operator.position.copy(vehiclePoint(localPosition));
-      if(!debugPaused && state===STATES.VEHICLE_FIRST_PERSON) {
+      if(!debugPaused && selectedScenario==="patrol" && state===STATES.VEHICLE_FIRST_PERSON) {
       if(automaticPatrolAt===null)automaticPatrolAt=now+1000;
       if(now>=automaticPatrolAt){automaticPatrolAt=null;beginPatrol();}
     } else automaticPatrolAt=null;
@@ -1909,7 +2003,7 @@
       if (u >= 1) {
         playOperatorAction('Idle',true,.2);
         setState(STATES.VEHICLE_ENTRY_AVAILABLE);
-        if(!debugPaused && state===STATES.VEHICLE_FIRST_PERSON) {
+        if(!debugPaused && selectedScenario==="patrol" && state===STATES.VEHICLE_FIRST_PERSON) {
       if(automaticPatrolAt===null)automaticPatrolAt=now+1000;
       if(now>=automaticPatrolAt){automaticPatrolAt=null;beginPatrol();}
     } else automaticPatrolAt=null;
@@ -1975,11 +2069,13 @@
       let direction=new THREE.Vector3(Math.sin(followYaw)*Math.cos(exteriorElevation),Math.sin(exteriorElevation),-Math.cos(followYaw)*Math.cos(exteriorElevation));
       if(encounter) {
         const person=contact.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,.85,0));
-        target.lerp(person,.4);
+        target.lerp(person,.5);
         const forward=new THREE.Vector3(0,0,-1).applyQuaternion(vehicle.quaternion);
         const right=new THREE.Vector3(1,0,0).applyQuaternion(vehicle.quaternion);
         const side=Math.sign(person.clone().sub(vehicleCenter).dot(right))||1;
-        direction=right.multiplyScalar(-side).addScaledVector(forward,.28);direction.y=.38;direction.normalize();
+        // Reveal from the open garden side after stopping; retain the road-side view during braking.
+        const reveal=observationPhase==='OBSERVING';
+        direction=right.multiplyScalar(reveal?side:-side).addScaledVector(forward,reveal?-.45:.28);direction.y=.38;direction.normalize();
         const viewRight=new THREE.Vector3(0,1,0).cross(direction).normalize(),viewUp=direction.clone().cross(viewRight);
         const points=[];
         for(const x of [-1.15,1.15])for(const y of [0,2.7])for(const z of [-2.7,2.7])points.push(vehicle.localToWorld(new THREE.Vector3(x,y,z)));
@@ -2056,7 +2152,7 @@
         if(travel<brakingDistance || gap<=0)continue;
         vehicle.position.copy(start).addScaledVector(forward,travel);vehicle.updateMatrixWorld(true);
         const candidateEye=operatorEye.getWorldPosition(new THREE.Vector3());
-        const samples=[new THREE.Vector3(0,1.25,0),new THREE.Vector3(-.12,1.1,0),new THREE.Vector3(.12,1.1,0)];
+        const samples=[new THREE.Vector3(0,1.13,0),new THREE.Vector3(-.12,1.03,0),new THREE.Vector3(.12,1.03,0)];
         const visibleSamples=samples.filter(p=>opaqueSightline(candidateEye,target.clone().add(p))).length;
         if(visibleSamples<2)continue;
         const score=Math.abs(degrees-50)+(3-visibleSamples)*12;
@@ -2077,7 +2173,7 @@
       nextSightCheck=patrolElapsed+.15;
       vehicle.updateMatrixWorld(true);vegetation.updateMatrixWorld(true);
       const eye=operatorEye.getWorldPosition(new THREE.Vector3());
-      const delta=contact.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,1.25,0)).sub(eye);
+      const delta=contact.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,1.13,0)).sub(eye);
       driverSightClear=opaqueSightline(eye,eye.clone().add(delta));
     }
     return driverSightClear;
@@ -2085,7 +2181,7 @@
 
   function settledPersonSightline() {
     if(!operatorEye || vehicleSpeed>.01)return false;
-    const delta=contact.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,1.25,0)).sub(operatorEye.getWorldPosition(new THREE.Vector3()));
+    const delta=contact.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,1.13,0)).sub(operatorEye.getWorldPosition(new THREE.Vector3()));
     const aimYaw=THREE.MathUtils.clamp(Math.atan2(-delta.x,-delta.z),-1.05,1.05);
     const aimPitch=THREE.MathUtils.clamp(Math.atan2(delta.y,Math.hypot(delta.x,delta.z)),-.5,.35);
     return Math.abs(yaw-aimYaw)<=.06 && Math.abs(pitch-aimPitch)<=.07 && personSightlineClear();
@@ -2103,7 +2199,7 @@
     document.getElementById('completionPanel').hidden=false;
     document.getElementById('replayScenario').focus();
   }
-  document.getElementById('replayScenario').addEventListener('click',()=>location.reload());
+  document.getElementById('replayScenario').addEventListener('click',()=>{if(selectedScenario==='interception')sessionStorage.setItem('tactixReplay','interception');location.reload();});
   document.getElementById('exitScenario').addEventListener('click',async()=>{
     // Return to the start screen and leave immersive mode; never try to close a user-owned tab.
     if(document.fullscreenElement) {
@@ -2201,7 +2297,7 @@
   }
 
   function updateSensorCamera() {
-    const target=ptzHolding()?contact.position.clone().add(new THREE.Vector3(0,.78,0)):null;
+    const target=selectedScenario==='interception' && aerialContact?aerialContact.position.clone():ptzHolding()?contact.position.clone().add(new THREE.Vector3(0,.78,0)):null;
     if(ptzPan && ptzTilt) {
       if(target) {
         for(let i=0;i<3;i++) {
@@ -2307,7 +2403,7 @@
     if (!debugPaused && [STATES.EXTERIOR_THIRD_PERSON,STATES.VEHICLE_ENTRY_TRANSITION].includes(state)) {
       updateIntro(now);
     }
-    if(!debugPaused && state===STATES.VEHICLE_FIRST_PERSON) {
+    if(!debugPaused && selectedScenario==="patrol" && state===STATES.VEHICLE_FIRST_PERSON) {
       if(automaticPatrolAt===null)automaticPatrolAt=now+1000;
       if(now>=automaticPatrolAt){automaticPatrolAt=null;beginPatrol();}
     } else automaticPatrolAt=null;
@@ -2322,11 +2418,13 @@
     }
     // Both cameras consume the final vehicle and skeleton transforms of this frame.
     scene.updateMatrixWorld(true);
-    if(!debugPaused && [STATES.VEHICLE_FIRST_PERSON,STATES.PATROL,STATES.CONTACT,STATES.INSPECTING,STATES.TRACKING,STATES.DISMISSED].includes(state)) updateOperatorCamera(now);
+    if(!debugPaused && [STATES.LAUNCH_READY,STATES.VEHICLE_FIRST_PERSON,STATES.PATROL,STATES.CONTACT,STATES.INSPECTING,STATES.TRACKING,STATES.DISMISSED].includes(state)) updateOperatorCamera(now);
+    if(!debugPaused && state===STATES.LAUNCHING)updateLaunch(elapsed);
+    if(state===STATES.LAUNCHING)el.viewToggle.hidden=true;
     updateDebugVisualization();
     updateDebugCamera();
     updateSensorCamera();
-    el.scanReadout.hidden=!exteriorView || !seatedStates.includes(state);
+    el.scanReadout.hidden=selectedScenario==='interception' || !exteriorView || !seatedStates.includes(state);
     if(!el.scanReadout.hidden) {
       const degrees=((THREE.MathUtils.radToDeg(-(ptzPan?.rotation.y || 0))%360)+360)%360;
       el.scanArrow.style.transform='rotate('+degrees+'deg)';

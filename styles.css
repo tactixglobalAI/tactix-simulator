@@ -292,3 +292,12 @@ button.suggested-action:hover,button.suggested-action:focus-visible { outline:2p
 .completion-actions { display:flex; flex-wrap:wrap; gap:12px; }.completion-actions button { flex:1 1 150px; min-height:48px; font-size:14px; cursor:pointer; }
 .recorded-clip-dialog { width:min(850px,95vw); max-height:94dvh; background:#07121b; border:1px solid #526b83; padding:12px; }
 .recorded-clip-dialog video { display:block; width:100%; max-height:75dvh; margin-top:8px; }.recorded-clip-dialog button { min-height:44px; }
+
+.start-panel { width:min(760px,calc(100% - 36px)); max-height:calc(100% - 28px); overflow:auto; }
+.start-panel h1 { font-size:clamp(26px,3vw,36px); }
+.scenario-cards { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.scenario-cards article { border:1px solid #344b60; padding:18px; display:flex; flex-direction:column; }
+.scenario-cards h2 { font-size:20px; margin:0 0 8px; }
+.scenario-cards p { flex:1; margin:0 0 16px; }
+.scenario-cards button { min-height:48px; width:100%; }
+@media(max-width:600px){ .scenario-cards { grid-template-columns:1fr; gap:10px; } .start-panel { padding:16px; } .scenario-cards article { padding:12px; } }

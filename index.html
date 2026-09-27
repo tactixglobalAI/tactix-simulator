@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>TactixGlobal · Operator Simulator</title>
-  <link rel="stylesheet" href="styles.css?v=exit-hands-down-1">
+  <link rel="stylesheet" href="styles.css?v=scenarios-1">
 </head>
 <body>
   <header class="topbar">
@@ -49,11 +49,13 @@
     <div id="ptzScanReadout" class="ptz-scan-readout" hidden><span id="ptzScanArrow" aria-hidden="true">↑</span><div><strong id="ptzScanStatus">PTZ STANDBY</strong><small id="ptzScanAngle">0° · VEHICLE RELATIVE</small></div></div>
 
     <section id="startPanel" class="start-panel">
-      <p class="eyebrow">PLACEHOLDER-ASSET PROTOTYPE</p>
-      <h1>Enter the patrol vehicle</h1>
-      <p>Take the operator seat, begin a night patrol, inspect a thermal contact and direct Sentry One PTZ.</p>
-      <button id="enterButton" disabled>LOADING SIMULATOR…</button>
-      <small>Mouse or touch: look around · Dashboard controls appear after entry</small>
+      <p class="eyebrow">TACTIXGLOBAL · INTERACTIVE SCENARIOS</p>
+      <h1>Choose your scenario</h1>
+      <div class="scenario-cards">
+        <article><h2>Night Patrol</h2><p>Join the patrol, detect a concealed person and review a recorded thermal clip.</p><button id="enterButton" disabled>LOADING…</button></article>
+        <article><h2>Interceptor Launch</h2><p>Review an aerial contact from the parked vehicle and authorize a launch demonstration.</p><button id="interceptionButton" disabled>LOADING…</button></article>
+      </div>
+      <small>Mouse or touch · Choose a scenario to begin</small>
     </section>
 
     <section id="completionPanel" class="completion-panel" aria-labelledby="completionTitle" hidden>
@@ -71,7 +73,7 @@
 
     <section class="mission-hud" aria-live="polite">
       <div><span>STATE</span><strong id="stateLabel">LOADING</strong></div>
-      <div><span>MISSION</span><strong id="missionLabel">NIGHT PATROL</strong></div>
+      <div><span>MISSION</span><strong id="missionLabel">SELECT SCENARIO</strong></div>
       <div><span>SENTRY</span><strong id="sentryLabel">STANDBY</strong></div>
     </section>
 
@@ -130,6 +132,6 @@
 
   <script src="vendor/three-0.128.0/three.min.js"></script>
   <script src="vendor/three-0.128.0/GLTFLoader.js"></script>
-  <script src="js/simulator.js?v=exit-hands-down-1"></script>
+  <script src="js/simulator.js?v=scenarios-1"></script>
 </body>
 </html>
