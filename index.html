@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>TactixGlobal · Operator Simulator</title>
-  <link rel="stylesheet" href="styles.css?v=phone-framing-1">
+  <link rel="stylesheet" href="styles.css?v=patrol-pacing-2">
 </head>
 <body>
   <header class="topbar">
@@ -95,7 +95,7 @@
 
       <section class="system-message">
         <span>SYSTEM</span>
-        <p id="systemMessage">Operator seated. Start patrol when ready.</p>
+        <p id="systemMessage">Operator seated. Patrol starts automatically.</p>
       </section>
 
       <section class="track-panel" hidden>
@@ -107,7 +107,7 @@
       </section>
 
       <div class="actions">
-        <button id="patrolButton">BEGIN PATROL</button>
+        <button id="patrolButton" hidden>PATROL AUTOMATIC</button>
         <button id="thermalButton" disabled>VIEW PTZ THERMAL</button>
         <button id="trackButton" disabled>TRACK CONTACT</button>
         <button id="ignoreButton" class="secondary" disabled>DISMISS</button>
@@ -123,6 +123,6 @@
 
   <script src="vendor/three-0.128.0/three.min.js"></script>
   <script src="vendor/three-0.128.0/GLTFLoader.js"></script>
-  <script src="js/simulator.js?v=phone-framing-1"></script>
+  <script src="js/simulator.js?v=patrol-pacing-2"></script>
 </body>
 </html>

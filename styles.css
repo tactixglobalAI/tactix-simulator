@@ -275,3 +275,8 @@ body { display:flex; flex-direction:column; height:100dvh; padding:env(safe-area
 
 button.suggested-action { border-color:#86c6d9; box-shadow:0 0 0 1px #86c6d944,0 0 10px #86c6d922; }
 button.suggested-action:hover,button.suggested-action:focus-visible { outline:2px solid #b9e5f0; outline-offset:2px; }
+
+@keyframes fullscreen-hint-pulse { 0%,100% { border-color:#526b83; box-shadow:none; } 50% { border-color:#a5d9e8; box-shadow:0 0 10px #86c6d955; } }
+.fullscreen-suggestion { animation:fullscreen-hint-pulse 2.8s ease-in-out infinite; }
+@media(prefers-reduced-motion:reduce) { .fullscreen-suggestion { animation:none; border-color:#a5d9e8; } }
+
