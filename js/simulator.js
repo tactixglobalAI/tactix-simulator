@@ -166,8 +166,11 @@
   const eventClip={status:"IDLE",sentAt:null,sendStarted:0,blob:null,url:null,recorder:null,stream:null,started:0,lastFrame:0,timer:null,frames:0,error:null};
   let recordingCanvas=null,recordingContext=null,recordingPixels=null,recordingImage=null;
   let seatedRootLocal=null;
+  const seatedHeadRest={};
   let exteriorView = false;
   let exteriorYaw = .65, exteriorElevation = .40;
+  let exteriorManual=false, exteriorManualDistance=0, exteriorCameraReady=false, exteriorCameraTime=0;
+  const exteriorFocus=new THREE.Vector3(),exteriorLastVehicle=new THREE.Vector3();
   const seatedStates = [STATES.VEHICLE_FIRST_PERSON,STATES.PATROL,STATES.CONTACT,STATES.INSPECTING,STATES.TRACKING,STATES.DISMISSED];
   let pointerDown = false;
   let lastPointer = { x: 0, y: 0 };
@@ -710,6 +713,8 @@
   function collectRigBones() {
     const required = {
       hip: "CC_Base_Hip",
+      neck: "CC_Base_NeckTwist01",
+      head: "CC_Base_Head",
       leftThigh: "CC_Base_L_Thigh",
       leftCalf: "CC_Base_L_Calf",
       leftFoot: "CC_Base_L_Foot",
@@ -1379,6 +1384,7 @@
         vehiclePoint([side==='left'?.12:.82,.9,-.05]),1);
     }
     seatedRootLocal=vehicle.worldToLocal(operator.position.clone());
+    for(const key of ['neck','head'])if(rigBones[key])seatedHeadRest[key]=rigBones[key].quaternion.clone();
   }
 
   function installRollingWheels() {
@@ -1555,7 +1561,7 @@
 
   el.viewToggle.addEventListener("click", () => {
     if(!seatedStates.includes(state)) return;
-    exteriorView=!exteriorView; pointerDown=false;
+    exteriorView=!exteriorView; pointerDown=false;exteriorManual=false;exteriorCameraReady=false;
     el.viewToggle.textContent=exteriorView?'DRIVER VIEW':'EXTERIOR VIEW';
     el.viewToggle.setAttribute('aria-pressed',String(exteriorView));
     el.lookHint.textContent=exteriorView?'DRAG TO ORBIT · DRIVER VIEW FOR TOUCHSCREEN':'DRAG TO LOOK AROUND';
@@ -1576,6 +1582,10 @@
     pointerDragged=true;
     const dx=event.clientX-lastPointer.x,dy=event.clientY-lastPointer.y;
     if(exteriorView) {
+      if(!exteriorManual){
+        const delta=camera.position.clone().sub(vehicle.localToWorld(new THREE.Vector3(0,1.15,0)));
+        exteriorManualDistance=delta.length();exteriorYaw=Math.atan2(delta.x,-delta.z);exteriorElevation=Math.asin(delta.y/delta.length());exteriorManual=true;
+      }
       exteriorYaw-=dx*.005;
       exteriorElevation=THREE.MathUtils.clamp(exteriorElevation+dy*.004,.20,.85);
     } else {
@@ -1666,6 +1676,10 @@
       updateOperatorCamera(0);
       const eye=operatorEye.getWorldPosition(new THREE.Vector3()),delta=contact.position.clone().sub(eye);
       return {eye:eye.toArray(),person:contact.position.toArray(),ahead:eye.z-contact.position.z,bearing:Math.atan2(delta.x,-delta.z)*180/Math.PI,clear:personSightlineClear(),yaw};
+    },
+    exteriorSnapshot() {
+      const points=[vehicle.localToWorld(new THREE.Vector3(0,1.15,0)),contact.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,.85,0))];
+      return {head:rigBones.head?.quaternion.toArray(),neck:rigBones.neck?.quaternion.toArray(),active:exteriorView,manual:exteriorManual,phase:observationPhase,focus:exteriorFocus.toArray(),position:camera.position.toArray(),projected:points.map(p=>p.project(camera).toArray())};
     },
     displaySnapshot() {
       const pixels=new Uint8Array(4);renderer.readRenderTargetPixels(touchscreenUI.target,650,34,1,1,pixels);
@@ -1922,23 +1936,59 @@
     }
   }
 
+  function updateSeatedHead() {
+    if(!seatedRootLocal)return;
+    for(const key of ['neck','head'])if(rigBones[key] && seatedHeadRest[key])rigBones[key].quaternion.copy(seatedHeadRest[key]);
+    operator.updateMatrixWorld(true);
+    for(const [key,weight] of [['neck',.35],['head',.65]]) {
+      const bone=rigBones[key];if(!bone || !seatedHeadRest[key])continue;
+      const turn=new THREE.Quaternion().setFromEuler(new THREE.Euler(THREE.MathUtils.clamp(pitch,-.35,.25)*weight,THREE.MathUtils.clamp(yaw,-1.05,1.05)*weight,0,'YXZ'));
+      const desired=turn.multiply(bone.getWorldQuaternion(new THREE.Quaternion()));
+      bone.quaternion.copy(bone.parent.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(desired));
+      bone.updateMatrixWorld(true);
+    }
+  }
+
   function updateOperatorCamera(now) {
     if (!operatorEye) return;
     const seatedFov=!exteriorView && camera.aspect<1 ? Math.min(100,THREE.MathUtils.radToDeg(2*Math.atan(Math.tan(THREE.MathUtils.degToRad(35))/camera.aspect))) : 70;
     if(camera.fov!==seatedFov){camera.fov=seatedFov;camera.updateProjectionMatrix();}
     operator.visible=exteriorView && !!seatedRootLocal;
-    if(seatedRootLocal) {operator.position.copy(vehiclePoint(seatedRootLocal.toArray()));operator.updateMatrixWorld(true);}
+    if(seatedRootLocal) {operator.position.copy(vehiclePoint(seatedRootLocal.toArray()));operator.updateMatrixWorld(true);updateSeatedHead();}
     if(exteriorView) {
+      const stamp=performance.now(),dt=exteriorCameraTime?Math.min((stamp-exteriorCameraTime)/1000,.1):0;
+      exteriorCameraTime=stamp;
       const halfFov=THREE.MathUtils.degToRad(camera.fov/2);
       const fitAngle=Math.min(halfFov,Math.atan(Math.tan(halfFov)*camera.aspect));
-      const distance=3.1/Math.sin(fitAngle);
-      const target=vehicle.localToWorld(new THREE.Vector3(0,1.15,0));
-      camera.position.copy(target).add(new THREE.Vector3(
-        Math.sin(exteriorYaw)*Math.cos(exteriorElevation),Math.sin(exteriorElevation),
-        -Math.cos(exteriorYaw)*Math.cos(exteriorElevation)).multiplyScalar(distance));
-      camera.lookAt(target);
+      const vehicleCenter=vehicle.localToWorld(new THREE.Vector3(0,1.15,0));
+      if(exteriorCameraReady){const motion=vehicleCenter.clone().sub(exteriorLastVehicle);camera.position.add(motion);exteriorFocus.add(motion);}
+      exteriorLastVehicle.copy(vehicleCenter);
+      const encounter=!exteriorManual && ['STOPPING','OBSERVING'].includes(observationPhase) && contact.visible;
+      const target=vehicleCenter.clone();
+      let distance=exteriorManual?exteriorManualDistance:3.1/Math.sin(fitAngle);
+      let direction=new THREE.Vector3(Math.sin(exteriorYaw)*Math.cos(exteriorElevation),Math.sin(exteriorElevation),-Math.cos(exteriorYaw)*Math.cos(exteriorElevation));
+      if(encounter) {
+        const person=contact.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,.85,0));
+        target.lerp(person,.4);
+        const forward=new THREE.Vector3(0,0,-1).applyQuaternion(vehicle.quaternion);
+        const right=new THREE.Vector3(1,0,0).applyQuaternion(vehicle.quaternion);
+        const side=Math.sign(person.clone().sub(vehicleCenter).dot(right))||1;
+        direction=right.multiplyScalar(-side).addScaledVector(forward,.28);direction.y=.38;direction.normalize();
+        const viewRight=new THREE.Vector3(0,1,0).cross(direction).normalize(),viewUp=direction.clone().cross(viewRight);
+        const points=[];
+        for(const x of [-1.15,1.15])for(const y of [0,2.7])for(const z of [-2.7,2.7])points.push(vehicle.localToWorld(new THREE.Vector3(x,y,z)));
+        for(const x of [-.5,.5])for(const y of [-.85,.85])points.push(person.clone().add(new THREE.Vector3(x,y,0)));
+        distance=4.5;
+        for(const point of points){const d=point.sub(target),depth=d.dot(direction);distance=Math.max(distance,depth+Math.abs(d.dot(viewRight))/(Math.tan(halfFov)*camera.aspect)*1.18,depth+Math.abs(d.dot(viewUp))/Math.tan(halfFov)*1.18);}
+
+      }
+      const desired=target.clone().addScaledVector(direction,distance);
+      if(!exteriorCameraReady){camera.position.copy(desired);exteriorFocus.copy(target);exteriorCameraReady=true;}
+      else {const blend=1-Math.exp(-dt*(exteriorManual?7:1.4));camera.position.lerp(desired,blend);exteriorFocus.lerp(target,blend);}
+      camera.lookAt(exteriorFocus);
       return;
     }
+    exteriorCameraReady=false;
     const pos = new THREE.Vector3();
     operatorEye.getWorldPosition(pos);
     // Rigid seat mount: no walking-style bob or lateral head sway.
@@ -2060,7 +2110,7 @@
     }
     if((observationPhase==='STOPPING' || officerSlowPending) && !approachTracking && vehicleSpeed<=2 && remainingObservationDistance()<=Math.max(3,vehicleSpeed*4) && personSightlineClear())approachTracking=true;
     updateDriverAttention(dt);
-    if(observationPhase==='OBSERVING' && !exteriorView && !expandedDialog.open && !clipMonitorAttention && settledPersonSightline())personObservationTime+=dt;
+    if(observationPhase==='OBSERVING' && !expandedDialog.open && !clipMonitorAttention && settledPersonSightline())personObservationTime+=dt;
     if(postSendObservation && personObservationTime>=5)proceedPatrol();
     if(eventClip.status==='RECORDED' && (personObservationTime>=6 || observationPhase==='RESUMING' || state===STATES.DISMISSED)) {
       eventClip.status='READY';clipMonitorAttention=observationPhase==='OBSERVING';manualLookUntil=0;
