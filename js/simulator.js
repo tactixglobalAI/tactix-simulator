@@ -1140,7 +1140,9 @@
   function renderTouchscreen() {
     if(!touchscreenUI)return;
     const ui=touchscreenUI,ctx=ui.context;
-    const label=[state,observationPhase,manualPtz,eventClip.status,driverSpeedTarget,sensorVisible,sensorThermal,Math.round(vehicleSpeed*3.6).toString(),el.message.textContent].join('|');
+    const sendPulse=eventClip.status==='READY' && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const pulseTime=sendPulse?Math.floor(performance.now()/100):0;
+    const label=[pulseTime,state,observationPhase,manualPtz,eventClip.status,driverSpeedTarget,sensorVisible,sensorThermal,Math.round(vehicleSpeed*3.6).toString(),el.message.textContent].join('|');
     if(label!==ui.lastLabel) {
       ui.lastLabel=label;
       ctx.fillStyle='#07121b';ctx.fillRect(0,0,720,480);
@@ -1158,7 +1160,11 @@
       }
       for(const button of touchscreenControls()) {
         ctx.fillStyle='#203e52';ctx.fillRect(button.x,button.y??400,button.w,button.h??72);
-        if(suggestedScreenAction(button.label)){ctx.strokeStyle='#86c6d9';ctx.lineWidth=3;ctx.strokeRect(button.x+2,(button.y??400)+2,button.w-4,(button.h??72)-4);}
+        if(suggestedScreenAction(button.label)){
+          ctx.save();ctx.strokeStyle='#86c6d9';ctx.lineWidth=3;
+          if(button.label==='SEND CLIP' && sendPulse){const glow=.5-.5*Math.cos(performance.now()*Math.PI*2/2800);ctx.globalAlpha=.4+.6*glow;ctx.shadowColor='#86c6d9';ctx.shadowBlur=10*glow;}
+          ctx.strokeRect(button.x+2,(button.y??400)+2,button.w-4,(button.h??72)-4);ctx.restore();
+        }
         ctx.fillStyle='#e3f1f8';ctx.font=(button.h?'bold 23px monospace':'bold 28px monospace');ctx.textAlign='center';ctx.fillText(button.label,button.x+button.w/2,(button.y??400)+(button.h??72)/2+10);ctx.textAlign='left';
       }
       ui.texture.needsUpdate=true;
@@ -1212,6 +1218,7 @@
         const button=document.createElement('button');button.type='button';button.textContent=entry.label;
         if(entry.w>300)button.className='wide';
         if(suggestedScreenAction(entry.label))button.classList.add('suggested-action');
+        if(entry.label==='SEND CLIP')button.classList.add('clip-send-hint');
         button.addEventListener('click',()=>{prepareNarration();entry.action();});controls.appendChild(button);
       }
     }

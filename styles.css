@@ -280,3 +280,6 @@ button.suggested-action:hover,button.suggested-action:focus-visible { outline:2p
 .fullscreen-suggestion { animation:fullscreen-hint-pulse 2.8s ease-in-out infinite; }
 @media(prefers-reduced-motion:reduce) { .fullscreen-suggestion { animation:none; border-color:#a5d9e8; } }
 
+
+.clip-send-hint { animation:fullscreen-hint-pulse 2.8s ease-in-out infinite; }
+@media(prefers-reduced-motion:reduce) { .clip-send-hint { animation:none; border-color:#a5d9e8; } }

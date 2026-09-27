@@ -31,9 +31,9 @@
     "assets/models/ptz_touchscreen_clean.glb": "05015947c6deaeddd070fd033f69c30dbb24e588428a65f66846f5145d1b03d3",
     "assets/models/roof_platform.glb": "57ee7579da03712dfb555a1844bfb9dec597568a3512b0d6e768450009f55d03",
     "assets/models/tactical_officer_rigged.glb": "81df701be03d02b3a65518bac853fa503019017cb09d6b14b69760f974d28484",
-    "index.html": "b0cf9b2c774ad4d17c3649a3f63b2b2a72f710e09875a4c9d129c6f73e5d3f2d",
-    "js/simulator.js": "52f5fbcebfc83def6bb9d6c44597000efbb28cb94b751014b88d06d749d3155c",
-    "styles.css": "e3d2e1ef1677791adf7195c8b1acea39e98b43029bdb164dc569b2ccd8efee4b",
+    "index.html": "ae3ce9528da97cc05f47572804901232fc5a1fc714646f8a522887cb4d51458c",
+    "js/simulator.js": "eeef92f3c9690678a465cf882730239752f4281b96a9cf9b59f6be59048fa2b0",
+    "styles.css": "a29f2001a2e7104f2bf341528010b2f2a49c1fcda14db0881dd106191fb21444",
     "vendor/three-0.128.0/GLTFLoader.js": "5c15967ba830918a9caea6338712c994c354bccd4edc4569bde411c3ec06a3e6",
     "vendor/three-0.128.0/LICENSE": "7dddf7c5b8fd10ee654db8857d75d104b5557889aa5a91fc4ca545ea7c07062f",
     "vendor/three-0.128.0/three.min.js": "9274bbcec8d96168626c732b5d31c775aa8cfb7eaa0599bec0c175908a2c1ce2"
