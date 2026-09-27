@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>TactixGlobal · Operator Simulator</title>
-  <link rel="stylesheet" href="styles.css?v=exterior-encounter-2">
+  <link rel="stylesheet" href="styles.css?v=scenario-ending-white-2">
 </head>
 <body>
   <header class="topbar">
@@ -56,6 +56,13 @@
       <small>Mouse or touch: look around · Dashboard controls appear after entry</small>
     </section>
 
+    <section id="completionPanel" class="completion-panel" aria-labelledby="completionTitle" hidden>
+      <div class="completion-card"><p>TACTIXGLOBAL · NIGHT PATROL</p><h2 id="completionTitle">Scenario complete</h2>
+      <ul id="completionSummary"></ul><div class="completion-actions">
+      <button id="replayScenario" type="button">REPLAY SCENARIO</button><button id="viewRecordedClip" type="button">VIEW RECORDED CLIP</button>
+      </div><small>Illustrative simulation · Classification remained unconfirmed.</small></div>
+    </section>
+    <dialog id="recordedClipDialog" class="recorded-clip-dialog" aria-label="Recorded activity clip"><button id="closeRecordedClip" type="button">CLOSE</button><video id="recordedClipPlayer" controls playsinline></video></dialog>
     <div id="entryFade" class="entry-fade" aria-hidden="true"></div>
     <section id="vehicleEntryPrompt" class="vehicle-entry-prompt" aria-live="polite" hidden>
       <span>DRIVER DOOR</span>
@@ -123,6 +130,6 @@
 
   <script src="vendor/three-0.128.0/three.min.js"></script>
   <script src="vendor/three-0.128.0/GLTFLoader.js"></script>
-  <script src="js/simulator.js?v=exterior-encounter-2"></script>
+  <script src="js/simulator.js?v=scenario-ending-white-2"></script>
 </body>
 </html>

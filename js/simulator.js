@@ -6,7 +6,7 @@
     officer: "assets/models/tactical_officer_rigged.glb?v=5",
     npc: "assets/models/hooded_npc.glb?v=1",
     touchscreen: "assets/models/ptz_touchscreen_clean.glb?v=1",
-    ptz: "assets/models/ptz_roof.glb?v=2",
+    ptz: "assets/models/ptz_roof.glb?v=white-panels-1",
     roofPlatform: "assets/models/roof_platform.glb?v=1",
     reconDrone: "PROCEDURAL_PLACEHOLDER",
     interceptor: "assets/models/interceptor_docked.glb?v=2"
@@ -23,6 +23,7 @@
     CONTACT: "CONTACT DETECTED",
     INSPECTING: "INSPECTING CONTACT",
     TRACKING: "TRACKING CONTACT",
+    COMPLETE: "SCENARIO COMPLETE",
     DISMISSED: "CONTACT DISMISSED"
   });
 
@@ -158,6 +159,7 @@
   let wheelTravel=0;
   let driverSpeedTarget=5;
   let officerSlowAt=null,officerSlowPending=false;
+  let departureElapsed=null;
   let observationPlan=null;
   let personObservationTime=0, automaticPatrolAt=null, driverSightClear=false, nextSightCheck=0, postSendObservation=false, approachTracking=false;
   let clipMonitorAttention=false, clipReturnTimer=null;
@@ -395,18 +397,20 @@
   function updateNpc(seconds) {
     if (!npcMixer) return;
     npcTime=seconds;
-    contact.visible=patrolElapsed>=ENCOUNTER_DELAY;
-    const moving=false; // CrouchWalk is baked and available; encounter stays behind cover for now.
-    const peek=seconds%18>=4 && seconds%18<7;
+    contact.visible=true;
+    const settling=seconds<2;
+    const moving=seconds>=2 && seconds<4;
+    const moveProgress=THREE.MathUtils.clamp((seconds-2)/2,0,1);
+    const peek=seconds>=4 && seconds%18>=4 && seconds%18<7;
     npcState=moving?NPC_STATES.CROUCH_MOVE:peek?NPC_STATES.PEEK:NPC_STATES.HIDDEN_CROUCH;
-    const action=npcActions[moving?'CrouchWalk':'CrouchIdle'];
+    const action=npcActions[settling?'StandToCrouch':moving?'CrouchWalk':'CrouchIdle'];
     for(const other of Object.values(npcActions)) { other.enabled=other===action; if(other===action) other.play(); }
-    action.time=moving?(seconds-9)%2:seconds%4;
+    action.time=settling?Math.min(action.getClip().duration-.001,seconds/2*action.getClip().duration):moving?moveProgress*action.getClip().duration:seconds%4;
     if(npcHead && npcHeadBase) npcHead.quaternion.copy(npcHeadBase);
     npcMixer.update(0);
     if(npcHead) npcHeadBase=npcHead.quaternion.clone();
     // Stationary crouch remains behind cover; peeking is a bounded additive rotation.
-    contact.position.x=8.2;
+    contact.position.x=9.2-moveProgress;
     if(npcHead && peek) npcHead.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),.12*Math.sin((seconds%18-4)/3*Math.PI)));
     contact.updateMatrixWorld(true);
   }
@@ -811,6 +815,14 @@
       const pole = target.clone().addScaledVector(direction,.55);pole.y+=.45;
       footContact(side,target,pole,contactWeight);
     });
+    // Add restrained reciprocal swing over the imported close-to-body walk pose.
+    const swing=Math.sin(u*cycles*Math.PI*2)*.24*contactWeight;
+    for(const [side,sign] of [['left',1],['right',-1]]){
+      const arm=rigBones[side+'UpperArm'];if(!arm)continue;
+      const worldTurn=new THREE.Quaternion().setFromAxisAngle(lateral,swing*sign);
+      const desired=worldTurn.multiply(arm.getWorldQuaternion(new THREE.Quaternion()));
+      arm.quaternion.copy(arm.parent.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(desired));arm.updateMatrixWorld(true);
+    }
   }
 
   function addTargetMarker(target, color) {
@@ -1543,7 +1555,7 @@
     patrolStartedAt = performance.now();
     contactTriggered = false;
     updateNpc(0);
-    manualPtz=false;scanAngle=SCAN_START_ANGLE;scanElapsed=0;detectionEvidence=null;vehicleSpeed=0;patrolElapsed=0;contact.visible=false;
+    manualPtz=false;scanAngle=SCAN_START_ANGLE;scanElapsed=0;detectionEvidence=null;vehicleSpeed=0;patrolElapsed=0;contact.visible=true;
     sensorVisible=true;sensorThermal=false;el.sensor.hidden=true;
     el.sensorTarget.textContent="360° SCAN";el.sensorMode.textContent="VISIBLE";
     el.patrol.disabled = true;
@@ -1685,7 +1697,7 @@
       const pixels=new Uint8Array(4);renderer.readRenderTargetPixels(touchscreenUI.target,650,34,1,1,pixels);
       return {pixelRatio:renderer.getPixelRatio(),buttonPixel:Array.from(pixels),screenSize:[touchscreenUI.target.width,touchscreenUI.target.height]};
     },
-    speedometerSnapshot() {return {observationPhase,plan:observationPlan?{stop:observationPlan.stop.toArray(),ahead:observationPlan.ahead,bearing:observationPlan.bearing,visibleSamples:observationPlan.visibleSamples,brakingDistance:observationPlan.brakingDistance,fallback:observationPlan.fallback}:null,approachTracking,postSendObservation,driverSightClear,personObservationTime,clipMonitorAttention,yaw,pitch,value:originalSpeedometer?.last,extraDisplayVisible:cockpit?.getObjectByName("InstrumentClusterSurface")?.visible,officerSlowPending,officerSlowAt};},
+    speedometerSnapshot() {return {departureElapsed,observationPhase,plan:observationPlan?{stop:observationPlan.stop.toArray(),ahead:observationPlan.ahead,bearing:observationPlan.bearing,visibleSamples:observationPlan.visibleSamples,brakingDistance:observationPlan.brakingDistance,fallback:observationPlan.fallback}:null,approachTracking,postSendObservation,driverSightClear,personObservationTime,clipMonitorAttention,yaw,pitch,value:originalSpeedometer?.last,extraDisplayVisible:cockpit?.getObjectByName("InstrumentClusterSurface")?.visible,officerSlowPending,officerSlowAt};},
     eventSnapshot() {return {status:eventClip.status,sentAt:eventClip.sentAt,sendStarted:eventClip.sendStarted,bytes:eventClip.blob?.size||0,url:eventClip.url,frames:eventClip.frames,error:eventClip.error,driverSpeedTarget,vehicleSpeed};},
     driverSpeed(speed) {if(debugEntry && [0,OBSERVATION_SPEED,PATROL_SPEED].includes(speed))setDriverSpeed(speed);},
     clipChoice(choice) {if(!debugEntry)return;if(choice==='SEND')simulateClipSend();if(choice==='KEEP')keepClipLocal();},
@@ -1966,7 +1978,8 @@
       const encounter=!exteriorManual && ['STOPPING','OBSERVING'].includes(observationPhase) && contact.visible;
       const target=vehicleCenter.clone();
       let distance=exteriorManual?exteriorManualDistance:3.1/Math.sin(fitAngle);
-      let direction=new THREE.Vector3(Math.sin(exteriorYaw)*Math.cos(exteriorElevation),Math.sin(exteriorElevation),-Math.cos(exteriorYaw)*Math.cos(exteriorElevation));
+      const followYaw=departureElapsed!==null && !exteriorManual?Math.PI-.5:exteriorYaw;
+      let direction=new THREE.Vector3(Math.sin(followYaw)*Math.cos(exteriorElevation),Math.sin(exteriorElevation),-Math.cos(followYaw)*Math.cos(exteriorElevation));
       if(encounter) {
         const person=contact.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,.85,0));
         target.lerp(person,.4);
@@ -2085,10 +2098,36 @@
     return Math.abs(yaw-aimYaw)<=.06 && Math.abs(pitch-aimPitch)<=.07 && personSightlineClear();
   }
 
+  function completeScenario() {
+    setState(STATES.COMPLETE);vehicleSpeed=0;driverSpeedTarget=0;
+    expandedDialog.close();el.entryFade.style.opacity='0';
+    const summary=document.getElementById('completionSummary');summary.replaceChildren();
+    const lines=['Person detected and observed','Patrol resumed · PTZ scanning'];
+    if(eventClip.blob)lines.splice(1,0,'Activity clip recorded');
+    lines.push(eventClip.status==='SIMULATED_SEND'?'Clip sent to command center — simulated':eventClip.status==='KEPT_LOCAL'?'Clip kept locally in this session':'Clip not transmitted');
+    for(const text of lines){const item=document.createElement('li');item.textContent=text;summary.appendChild(item);}
+    document.getElementById('viewRecordedClip').disabled=!eventClip.url;
+    document.getElementById('completionPanel').hidden=false;
+    document.getElementById('replayScenario').focus();
+  }
+  document.getElementById('replayScenario').addEventListener('click',()=>location.reload());
+  document.getElementById('viewRecordedClip').addEventListener('click',()=>{
+    if(!eventClip.url)return;
+    const player=document.getElementById('recordedClipPlayer');player.src=eventClip.url;
+    document.getElementById('recordedClipDialog').showModal();player.play().catch(()=>{});
+  });
+  document.getElementById('closeRecordedClip').addEventListener('click',()=>document.getElementById('recordedClipDialog').close());
+  document.getElementById('recordedClipDialog').addEventListener('close',()=>document.getElementById('recordedClipPlayer').pause());
+
   function updatePatrolVehicle(dt) {
     if(![STATES.PATROL,STATES.CONTACT,STATES.INSPECTING,STATES.TRACKING,STATES.DISMISSED].includes(state)) return;
     patrolElapsed+=dt;
-    contact.visible=patrolElapsed>=ENCOUNTER_DELAY;
+    if(departureElapsed!==null){
+      departureElapsed+=dt;
+      if(departureElapsed>6)el.entryFade.style.opacity=String(phaseEase((departureElapsed-6)/1.2));
+      if(departureElapsed>=7.2){completeScenario();return;}
+    }
+    contact.visible=true;
     if(observationPlan && (officerSlowPending || observationPhase==='STOPPING') && contact.position.distanceTo(observationPlan.target)>.5)observationPlan=planObservationStop();
     if(officerSlowPending && patrolElapsed>=officerSlowAt) {
       officerSlowPending=false;officerSlowAt=null;driverSpeedTarget=OBSERVATION_SPEED;observationPhase="STOPPING";nextSightCheck=0;
@@ -2101,7 +2140,7 @@
     if(observationPhase==='RESUMING') {
       resumeLookTime+=dt;
       if(resumeLookTime>=1.5 && Math.abs(yaw-.22)<.04){
-        observationPhase='NONE';driverSpeedTarget=PATROL_SPEED;
+        observationPhase='NONE';driverSpeedTarget=PATROL_SPEED;departureElapsed=0;
         manualPtz=false;scanAngle=THREE.MathUtils.euclideanModulo(-(ptzPan?.rotation.y||0),Math.PI*2);
         setState(STATES.PATROL);el.sentry.textContent='360° SCAN';el.trackState.textContent='OBSERVATION COMPLETE';
         sensorVisible=true;el.sensorTarget.textContent='360° SCAN';
