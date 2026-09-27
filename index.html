@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>TactixGlobal · Operator Simulator</title>
-  <link rel="stylesheet" href="styles.css?v=observation-stop-1">
+  <link rel="stylesheet" href="styles.css?v=clip-attention-3">
 </head>
 <body>
   <header class="topbar">
@@ -31,6 +31,7 @@
       <canvas id="expandedFeed" width="512" height="288" aria-label="Live PTZ video"></canvas>
       <button id="manualPtzButton" type="button" aria-pressed="false">MANUAL PTZ</button>
       <div id="manualPtzControls" hidden>
+        <button id="manualSensorMode" type="button">VISIBLE · SWITCH TO THERMAL</button>
         <div class="ptz-pad" aria-label="Manual camera controls">
           <button type="button" data-ptz-pan="-1" data-ptz-tilt="0" aria-label="Pan left">←</button>
           <button type="button" data-ptz-pan="0" data-ptz-tilt="1" aria-label="Tilt up">↑</button>
@@ -120,6 +121,6 @@
 
   <script src="vendor/three-0.128.0/three.min.js"></script>
   <script src="vendor/three-0.128.0/GLTFLoader.js"></script>
-  <script src="js/simulator.js?v=observation-stop-1"></script>
+  <script src="js/simulator.js?v=clip-attention-3"></script>
 </body>
 </html>

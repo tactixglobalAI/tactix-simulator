@@ -158,6 +158,7 @@
   let wheelTravel=0;
   let driverSpeedTarget=5;
   let officerSlowAt=null,officerSlowPending=false;
+  let clipMonitorAttention=false, clipReturnTimer=null;
   let observationPhase="NONE", resumeLookTime=0, manualLookUntil=0, screenAttention=false;
   let originalSpeedometer=null;
   const eventClip={status:"IDLE",sentAt:null,sendStarted:0,blob:null,url:null,recorder:null,stream:null,started:0,lastFrame:0,timer:null,frames:0,error:null};
@@ -212,6 +213,9 @@
   scene.add(road);
 
   const vergeMat = new THREE.MeshStandardMaterial({ color: 0x17221a, roughness: 1 });
+  const surroundingGround=new THREE.Mesh(new THREE.PlaneGeometry(2000,2000),vergeMat);
+  surroundingGround.name='SurroundingTerrain';surroundingGround.rotation.x=-Math.PI/2;
+  surroundingGround.position.set(0,-.025,-180);scene.add(surroundingGround);
   [-1, 1].forEach(side => {
     const verge = new THREE.Mesh(new THREE.PlaneGeometry(18, 420), vergeMat);
     verge.rotation.x = -Math.PI / 2;
@@ -629,6 +633,7 @@
     narrationSource = source;
     narrationActiveText=text;
     if(text.includes("Slow down.") && officerSlowPending)officerSlowAt=patrolElapsed+(clip.slowdown_seconds ?? 7.25);
+    if(text.includes('Clip transmitted successfully') && clipMonitorAttention)returnToObservation((buffer.duration+.6)*1000);
     source.start();
     narrationPlayed += 1;
   }
@@ -1022,6 +1027,7 @@
         eventClip.blob=new Blob(chunks,{type:recorder.mimeType});
         if(!eventClip.blob.size || !eventClip.frames){eventClip.status='ERROR';return;}
         eventClip.url=URL.createObjectURL(eventClip.blob);eventClip.status='READY';
+        clipMonitorAttention=true;manualLookUntil=0;
         setMessage('Activity clip recorded. Send the clip to the command center?',true);
       };
       recorder.onerror=()=>{eventClip.status='ERROR';eventClip.stream.getTracks().forEach(track=>track.stop());clearTimeout(eventClip.timer);};
@@ -1052,15 +1058,33 @@
     document.body.appendChild(a);a.click();a.remove();
   }
 
+  function returnToObservation(delay=0) {
+    clearTimeout(clipReturnTimer);
+    clipReturnTimer=setTimeout(()=>{
+      if(!clipMonitorAttention)return;
+      clipMonitorAttention=false;manualLookUntil=0;
+      expandedDialog.close();
+    },delay);
+  }
+
+  function keepClipLocal() {
+    if(eventClip.status!=='READY')return;
+    eventClip.status='KEPT_LOCAL';
+    for(let i=narrationQueue.length-1;i>=0;i--)if(narrationQueue[i].startsWith('Activity clip recorded.'))narrationQueue.splice(i,1);
+    returnToObservation(800);
+  }
+
   function simulateClipSend() {
     if(eventClip.status!=='READY')return;
     for(let i=narrationQueue.length-1;i>=0;i--)if(narrationQueue[i].startsWith('Activity clip recorded.'))narrationQueue.splice(i,1);
+    clipMonitorAttention=true;manualLookUntil=0;clearTimeout(clipReturnTimer);
     eventClip.status='TRANSMITTING';eventClip.sendStarted=performance.now();
     setMessage('Transmitting clip to command center. Simulated transmission.',false);
     setTimeout(()=>{
       if(eventClip.status!=='TRANSMITTING')return;
       eventClip.sentAt=new Date().toLocaleTimeString([],{hour12:false});
       eventClip.status='SIMULATED_SEND';
+      returnToObservation(8000); // Fallback when audio is unavailable.
       setMessage('Sentry One PTZ. Clip transmitted successfully to command center.',true);
     },3500);
   }
@@ -1074,12 +1098,16 @@
   function proceedPatrol() {
     if(observationPhase!=='OBSERVING')return;
     observationPhase='RESUMING';resumeLookTime=0;manualLookUntil=0;
+    clipMonitorAttention=false;clearTimeout(clipReturnTimer);
     expandedDialog.close();
     setMessage('Officer returning attention to the road. Resuming patrol.',false);
   }
 
   function touchscreenControls() {
     const buttons=touchscreenBaseControls();
+    if(seatedStates.includes(state) && state!==STATES.VEHICLE_FIRST_PERSON)buttons.push({x:438,w:258,y:8,h:48,label:manualPtz?'PTZ CONTROLS':'MANUAL PTZ',physicalOnly:true,action:()=>{
+      expandedDialog.showModal();expandedLabel='';if(!manualPtz)manualButton.click();
+    }});
     if(observationPhase==='OBSERVING')buttons.push({x:24,w:672,y:340,h:48,label:'PROCEED WITH PATROL',action:proceedPatrol});
     return buttons;
   }
@@ -1089,7 +1117,7 @@
     if(!seatedStates.includes(state))return [];
     if(eventClip.status==='READY')return [
       {x:24,w:324,label:'SEND CLIP',action:simulateClipSend},
-      {x:372,w:324,label:'KEEP LOCAL',action:()=>{eventClip.status='KEPT_LOCAL';}}
+      {x:372,w:324,label:'KEEP LOCAL',action:keepClipLocal}
     ];
     if(eventClip.status==='TRANSMITTING')return [];
     if(['KEPT_LOCAL','SIMULATED_SEND'].includes(eventClip.status))return [
@@ -1113,7 +1141,7 @@
       ui.lastLabel=label;
       ctx.fillStyle='#07121b';ctx.fillRect(0,0,720,480);
       ctx.fillStyle='#b9d8e9';ctx.font='bold 30px monospace';ctx.fillText('SENTRY ONE PTZ',24,34);
-      ctx.fillStyle=ptzHolding()?'#efb94f':'#72d6ad';ctx.font='20px monospace';ctx.fillText(manualPtz?'MANUAL PTZ':ptzHolding()?'PERSON · UNCONFIRMED':state===STATES.PATROL?'360° SCANNING':'STANDBY',420,31);
+      ctx.fillStyle=ptzHolding()?'#efb94f':'#72d6ad';ctx.font='20px monospace';if(state===STATES.VEHICLE_FIRST_PERSON)ctx.fillText('STANDBY',420,31);
       ctx.fillStyle='#99adbc';ctx.font='20px monospace';
       ctx.fillText(Math.round(vehicleSpeed*3.6).toString()+' km/h · '+(ptzHolding()?'CROUCHING / PARTLY CONCEALED':state===STATES.DISMISSED?'DISMISSED · SCAN RESUMED':'VISIBLE + THERMAL ONLINE'),24,61);
       ctx.fillStyle=eventClip.status==='RECORDING'?'#ffb45a':'#b9d8e9';ctx.font='18px monospace';
@@ -1149,9 +1177,10 @@
   const manualControls=document.getElementById('manualPtzControls');
   manualButton.addEventListener('click',()=>{
     manualPtz=!manualPtz;
-    if(manualPtz){manualPan=-(ptzPan?.rotation.y||0);manualTilt=ptzTilt?.rotation.x||0;sensorVisible=true;}
+    if(manualPtz){manualPan=-(ptzPan?.rotation.y||0);manualTilt=ptzTilt?.rotation.x||0;sensorVisible=true;sensorThermal=false;}
     else scanAngle=manualPan;
   });
+  document.getElementById('manualSensorMode').addEventListener('click',()=>{sensorThermal=!sensorThermal;});
   document.querySelectorAll('[data-ptz-pan]').forEach(button=>button.addEventListener('click',()=>{
     manualPan=THREE.MathUtils.euclideanModulo(manualPan+Number(button.dataset.ptzPan)*Math.PI/18,Math.PI*2);
     manualTilt=THREE.MathUtils.clamp(manualTilt+Number(button.dataset.ptzTilt)*Math.PI/36,-Math.PI/3,Math.PI/3);
@@ -1164,9 +1193,10 @@
     manualButton.textContent=manualPtz?'AUTO PTZ':'MANUAL PTZ';
     manualButton.setAttribute('aria-pressed',String(manualPtz));
     manualControls.hidden=!manualPtz;
+    document.getElementById('manualSensorMode').textContent=sensorThermal?'THERMAL · SWITCH TO VISIBLE':'VISIBLE · SWITCH TO THERMAL';
     document.getElementById('manualPtzBearing').textContent=`Pan ${Math.round(THREE.MathUtils.euclideanModulo(manualPan*180/Math.PI,360))}° · Tilt ${Math.round(manualTilt*180/Math.PI)}°`;
     const labels={READY:'Send the recorded clip to command center?',TRANSMITTING:'Transmitting clip… · Simulated transmission',SIMULATED_SEND:'✓ Clip transmitted to command center · '+eventClip.sentAt+' · Simulated transmission',KEPT_LOCAL:'Clip kept in this session. SAVE CLIP to retain it.',RECORDING:'Recording activity clip…',ERROR:'Clip recording failed.',UNAVAILABLE:'Video recording is unavailable in this browser.'};
-    const buttons=touchscreenControls();
+    const buttons=touchscreenControls().filter(button=>!button.physicalOnly && !(manualPtz && ['VISIBLE','THERMAL','VIEW VISIBLE','VIEW THERMAL'].includes(button.label)));
     const label=buttons.map(b=>b.label).join('|');
     document.getElementById('expandedStatus').textContent=Math.round(vehicleSpeed*3.6).toString()+' km/h · '+(observationPhase==='OBSERVING'?'Stopped · observing person. ':'')+(labels[eventClip.status]||el.message.textContent);
     if(label!==expandedLabel) {
@@ -1606,10 +1636,10 @@
       const pixels=new Uint8Array(4);renderer.readRenderTargetPixels(touchscreenUI.target,650,34,1,1,pixels);
       return {pixelRatio:renderer.getPixelRatio(),buttonPixel:Array.from(pixels),screenSize:[touchscreenUI.target.width,touchscreenUI.target.height]};
     },
-    speedometerSnapshot() {return {observationPhase,yaw,pitch,value:originalSpeedometer?.last,extraDisplayVisible:cockpit?.getObjectByName("InstrumentClusterSurface")?.visible,officerSlowPending,officerSlowAt};},
+    speedometerSnapshot() {return {observationPhase,clipMonitorAttention,yaw,pitch,value:originalSpeedometer?.last,extraDisplayVisible:cockpit?.getObjectByName("InstrumentClusterSurface")?.visible,officerSlowPending,officerSlowAt};},
     eventSnapshot() {return {status:eventClip.status,sentAt:eventClip.sentAt,sendStarted:eventClip.sendStarted,bytes:eventClip.blob?.size||0,url:eventClip.url,frames:eventClip.frames,error:eventClip.error,driverSpeedTarget,vehicleSpeed};},
     driverSpeed(speed) {if(debugEntry && [0,OBSERVATION_SPEED,PATROL_SPEED].includes(speed))setDriverSpeed(speed);},
-    clipChoice(choice) {if(!debugEntry)return;if(choice==='SEND')simulateClipSend();if(choice==='KEEP' && eventClip.status==='READY')eventClip.status='KEPT_LOCAL';},
+    clipChoice(choice) {if(!debugEntry)return;if(choice==='SEND')simulateClipSend();if(choice==='KEEP')keepClipLocal();},
     vehicleMotionSnapshot() {
       return {travel:wheelTravel,wheels:rollingWheels.map(({pivot,radius})=>({name:pivot.name,radius,angle:pivot.rotation.x,center:pivot.getWorldPosition(new THREE.Vector3()).toArray()})),driverVisible:operator.visible,seatedRoot:seatedRootLocal?.toArray()};
     },
@@ -1877,7 +1907,7 @@
   function updateDriverAttention(dt) {
     if(!operatorEye || patrolElapsed<manualLookUntil || pointerDown)return;
     let targetYaw=null,targetPitch=-.10;
-    if(expandedDialog.open && touchscreenSurface) {
+    if((expandedDialog.open || clipMonitorAttention) && touchscreenSurface) {
       screenAttention=true;
       const offset=touchscreenSurface.getWorldPosition(new THREE.Vector3()).sub(operatorEye.getWorldPosition(new THREE.Vector3()));
       targetYaw=Math.atan2(-offset.x,-offset.z);
@@ -2034,7 +2064,7 @@
         changed.push([obj,obj.material]);
         obj.material=human?thermalHotMaterial:thermalColdMaterial;
       });
-      scene.background=new THREE.Color(0x06090b);scene.fog=null;
+      scene.background=new THREE.Color(0x17212b);scene.fog=new THREE.FogExp2(0x17212b,.003);
     }
     if(!inset) {
       renderer.setRenderTarget(sensorTarget);
