@@ -66,8 +66,8 @@
     "us/audio/narration/contact_direction_6.mp3": "44f68e612c635a2fef7fea2cc4f1c47a64851bf091d868928bd0da0bca8c05c9",
     "us/audio/narration/contact_direction_7.mp3": "521e91a4e35d0a1b8500d5c8748ef0929cc78f47611dec691174e3fb2c8624e7",
     "us/audio/narration/manifest.json": "793045e345905f09ea0532962c1d416cf0efda6f03db60b6dace8275471542d1",
-    "us/index.html": "6653bdc73013ac30581e230b09fdfa3103b6e8aeea85268a20e43183bea09220",
-    "us/simulator.js": "ddf2da5e2f190df48d01a18ab7885027404b9d7c3bcb12efddb29a66b5a98ebb",
+    "us/index.html": "39dd942e36eefde0b73baae0f7c84af799fa508435c2e712d3ad564faf108a6b",
+    "us/simulator.js": "bcd78c9a38aa88473e259b77ee4c2b00945cb5a5d1bd2ca52c51dd309616c3c7",
     "vendor/three-0.128.0/GLTFLoader.js": "5c15967ba830918a9caea6338712c994c354bccd4edc4569bde411c3ec06a3e6",
     "vendor/three-0.128.0/LICENSE": "7dddf7c5b8fd10ee654db8857d75d104b5557889aa5a91fc4ca545ea7c07062f",
     "vendor/three-0.128.0/three.min.js": "9274bbcec8d96168626c732b5d31c775aa8cfb7eaa0599bec0c175908a2c1ce2"

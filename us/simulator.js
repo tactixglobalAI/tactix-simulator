@@ -1635,13 +1635,13 @@
           const pivot=new THREE.Group();pivot.position.fromArray(rotor.pivot);launchFlight.add(pivot);pivot.updateMatrixWorld(true);pivot.attach(mesh);launchRotors.push(pivot);
         }
       }
-      selectedScenario='interception';launchTime=0;launchCount=0;el.startPanel.hidden=true;contact.visible=false;
-      vehicleSpeed=driverSpeedTarget=0;observationPhase='NONE';manualPtz=false;sensorVisible=true;sensorThermal=false;
-      enterOperatorMode();setState(STATES.LAUNCH_READY);yaw=-.35;pitch=-.13;
       if(!aerialContact){
         const gltf=await new Promise((resolve,reject)=>new THREE.GLTFLoader().load('assets/models/air_contact_quadcopter.glb',resolve,undefined,reject));
         aerialContact=gltf.scene;aerialContact.name='AirContact01';scene.add(aerialContact);
       }
+      selectedScenario='interception';launchTime=0;launchCount=0;el.startPanel.hidden=true;contact.visible=false;
+      vehicleSpeed=driverSpeedTarget=0;observationPhase='NONE';manualPtz=false;sensorVisible=true;sensorThermal=false;
+      enterOperatorMode();setState(STATES.LAUNCH_READY);yaw=-.35;pitch=-.13;
       Object.assign(air,{phase:'PATROL',time:0,acquired:0,pan:0,tilt:0,fov:32,cueZ:vehicle.position.z-22,confirmed:false,history:[]});
       aerialContact.position.set(96,20,vehicle.position.z-97);aerialContact.visible=true;
       scanAngle=0;vehicleSpeed=0;driverSpeedTarget=PATROL_SPEED;setState(STATES.PATROL);
@@ -1657,11 +1657,10 @@
     air.phase=next;air.history.push({phase:next,time:air.time,vehicle:vehicle.position.toArray()});
   }
   function airStatus() {
+    if(!aerialContact)return 'LOADING AIR CONTACT';
     if(air.phase==='PATROL')return '360° SCAN · INTERCEPTOR DOCKED';
     if(air.phase==='DISMISSED')return 'CONTACT DISMISSED · SCAN RESUMED';
     if(state===STATES.LAUNCHING || state===STATES.COMPLETE)return 'LAUNCH DEMONSTRATION · NO INTERCEPT EVENT';
-    const d=aerialContact.position.clone().sub(ptzOrigin());
-    const bearing=THREE.MathUtils.euclideanModulo(THREE.MathUtils.radToDeg(Math.atan2(d.x,-d.z)),360);
     return `${contactBearing(aerialContact.getWorldPosition(new THREE.Vector3())).direction.toUpperCase()} · ${air.phase}`;
   }
   function requestAirLaunch() {
