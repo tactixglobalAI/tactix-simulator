@@ -1,0 +1,114 @@
+{
+  "engine": "Kokoro 0.9.4",
+  "model": "hexgrad/Kokoro-82M",
+  "revision": "f3ff3571791e39611d31c381e3a41a3af07b4987",
+  "voice": "bf_emma",
+  "speed": 1.0,
+  "sample_rate": 24000,
+  "clips": {
+    "Person detected, ahead. Tracking and recording. Slow down.": {
+      "file": "us/audio/narration/contact_direction_0.mp3?v=4eaed941d13b",
+      "spoken_text": "Person detected, ahead. Tracking and recording. Slow down.",
+      "seconds": 7.175,
+      "sha256": "4eaed941d13b6414f4851dd058ae10693d7a7fc219b4c99be25aba5f785b06bd",
+      "slowdown_seconds": 6.175
+    },
+    "Air contact detected, ahead. Sentry One PTZ slewing.": {
+      "file": "us/audio/narration/air_direction_0.mp3?v=79a3aa73c8b4",
+      "spoken_text": "Air contact detected, ahead. Sentry One P T Z slewing.",
+      "seconds": 4.75,
+      "sha256": "79a3aa73c8b4f0e6ccff95bec98d8dfe9af3d0b1514a640c073112e76081d9a4"
+    },
+    "Person detected, ahead on the right. Tracking and recording. Slow down.": {
+      "file": "us/audio/narration/contact_direction_1.mp3?v=b15597340d65",
+      "spoken_text": "Person detected, ahead on the right. Tracking and recording. Slow down.",
+      "seconds": 7.75,
+      "sha256": "b15597340d6589ba2b40e832a2a4502fd440a75c426270148b64a43a695b5f9b",
+      "slowdown_seconds": 6.75
+    },
+    "Air contact detected, ahead on the right. Sentry One PTZ slewing.": {
+      "file": "us/audio/narration/air_direction_1.mp3?v=35bba0d9373f",
+      "spoken_text": "Air contact detected, ahead on the right. Sentry One P T Z slewing.",
+      "seconds": 5.275,
+      "sha256": "35bba0d9373fc0c9e31053b43926ba684b7cfe36732db8c99ed8aee65f2b1570"
+    },
+    "Person detected, on the right. Tracking and recording. Slow down.": {
+      "file": "us/audio/narration/contact_direction_2.mp3?v=84093bdde51f",
+      "spoken_text": "Person detected, on the right. Tracking and recording. Slow down.",
+      "seconds": 7.375,
+      "sha256": "84093bdde51fad1d6118427effbfe159dd3145b42c96a7fff6e8a85e11d5423d",
+      "slowdown_seconds": 6.375
+    },
+    "Air contact detected, on the right. Sentry One PTZ slewing.": {
+      "file": "us/audio/narration/air_direction_2.mp3?v=637d00a24717",
+      "spoken_text": "Air contact detected, on the right. Sentry One P T Z slewing.",
+      "seconds": 4.925,
+      "sha256": "637d00a24717bc2fb7dfd989df1acb53ff80385026d8835a07f3b8711b3ef797"
+    },
+    "Person detected, behind on the right. Tracking and recording. Slow down.": {
+      "file": "us/audio/narration/contact_direction_3.mp3?v=f9249611dd48",
+      "spoken_text": "Person detected, behind on the right. Tracking and recording. Slow down.",
+      "seconds": 7.875,
+      "sha256": "f9249611dd4863bbf019843550fc28bb8ec09fcf5811edea38d752ad7d88b4fe",
+      "slowdown_seconds": 6.875
+    },
+    "Air contact detected, behind on the right. Sentry One PTZ slewing.": {
+      "file": "us/audio/narration/air_direction_3.mp3?v=d69e24d24e7b",
+      "spoken_text": "Air contact detected, behind on the right. Sentry One P T Z slewing.",
+      "seconds": 5.425,
+      "sha256": "d69e24d24e7b6e367e967e8ac60be3cb67945383cbefa3cb169352748f9c5b05"
+    },
+    "Person detected, behind. Tracking and recording. Slow down.": {
+      "file": "us/audio/narration/contact_direction_4.mp3?v=26c68d81fc84",
+      "spoken_text": "Person detected, behind. Tracking and recording. Slow down.",
+      "seconds": 7.325,
+      "sha256": "26c68d81fc8491bbc340b4d7eb6397cd1d96ddaefc26eea521e98c35c0b8e35a",
+      "slowdown_seconds": 6.325
+    },
+    "Air contact detected, behind. Sentry One PTZ slewing.": {
+      "file": "us/audio/narration/air_direction_4.mp3?v=3154c20c4248",
+      "spoken_text": "Air contact detected, behind. Sentry One P T Z slewing.",
+      "seconds": 4.925,
+      "sha256": "3154c20c424890c9bd88e71f0fda8c910d0d454833dc1949b9b0f970113555f9"
+    },
+    "Person detected, behind on the left. Tracking and recording. Slow down.": {
+      "file": "us/audio/narration/contact_direction_5.mp3?v=5d550f0619eb",
+      "spoken_text": "Person detected, behind on the left. Tracking and recording. Slow down.",
+      "seconds": 7.95,
+      "sha256": "5d550f0619ebaf68551f32cc9756fffc8957ee16d2c113f4e2910e8ad0251dbd",
+      "slowdown_seconds": 6.95
+    },
+    "Air contact detected, behind on the left. Sentry One PTZ slewing.": {
+      "file": "us/audio/narration/air_direction_5.mp3?v=b825d28824bb",
+      "spoken_text": "Air contact detected, behind on the left. Sentry One P T Z slewing.",
+      "seconds": 5.475,
+      "sha256": "b825d28824bb9082eba63254d7ace1895787a15cd995ed429c95dc90b00d7c98"
+    },
+    "Person detected, on the left. Tracking and recording. Slow down.": {
+      "file": "us/audio/narration/contact_direction_6.mp3?v=44f68e612c63",
+      "spoken_text": "Person detected, on the left. Tracking and recording. Slow down.",
+      "seconds": 7.425,
+      "sha256": "44f68e612c635a2fef7fea2cc4f1c47a64851bf091d868928bd0da0bca8c05c9",
+      "slowdown_seconds": 6.425
+    },
+    "Air contact detected, on the left. Sentry One PTZ slewing.": {
+      "file": "us/audio/narration/air_direction_6.mp3?v=88daab6309d1",
+      "spoken_text": "Air contact detected, on the left. Sentry One P T Z slewing.",
+      "seconds": 4.95,
+      "sha256": "88daab6309d1ebc0bae396859f9a1e00a8137014e06d741dc8974fa23fdb7c2a"
+    },
+    "Person detected, ahead on the left. Tracking and recording. Slow down.": {
+      "file": "us/audio/narration/contact_direction_7.mp3?v=521e91a4e35d",
+      "spoken_text": "Person detected, ahead on the left. Tracking and recording. Slow down.",
+      "seconds": 7.825,
+      "sha256": "521e91a4e35d0a1b8500d5c8748ef0929cc78f47611dec691174e3fb2c8624e7",
+      "slowdown_seconds": 6.825
+    },
+    "Air contact detected, ahead on the left. Sentry One PTZ slewing.": {
+      "file": "us/audio/narration/air_direction_7.mp3?v=b79f3696a5d1",
+      "spoken_text": "Air contact detected, ahead on the left. Sentry One P T Z slewing.",
+      "seconds": 5.3,
+      "sha256": "b79f3696a5d1c9dd926ecaed061c15e837318ea70626167b433e7720b7682b42"
+    }
+  }
+}

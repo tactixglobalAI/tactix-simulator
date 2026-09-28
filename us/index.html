@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <base href="../">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>TactixGlobal · US Operator Simulator</title>
+  <link rel="stylesheet" href="styles.css?v=air-sky-4">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <span class="brand">TACTIX<span>GLOBAL</span></span>
+      <span class="product">US REGION SIMULATOR</span>
+    </div>
+    <nav>
+      <button id="fullscreenButton" type="button">FULLSCREEN</button>
+      <a href="https://tactixglobalai.github.io/tactixglobal-skywatch/">HOW IT WORKS</a>
+      <a class="active" href="us/">SIMULATOR</a>
+    </nav>
+  </header>
+
+  <main id="stage" class="stage">
+    <p id="fullscreenHint" class="fullscreen-hint" role="status" hidden></p>
+    <canvas id="scene" aria-label="Interactive vehicle operator simulation"></canvas>
+    <button id="vehicleViewToggle" class="vehicle-view-toggle" type="button" aria-pressed="false" hidden>EXTERIOR VIEW</button>
+
+    <button id="expandTouchscreen" class="expand-touchscreen" type="button" hidden>ENLARGE SCREEN</button>
+    <dialog id="touchscreenDialog" class="touchscreen-dialog" aria-label="Expanded vehicle touchscreen">
+      <header><strong>SENTRY ONE PTZ</strong><button id="closeTouchscreen" type="button" aria-label="Close touchscreen">CLOSE</button></header>
+      <p id="expandedStatus" role="status"></p>
+      <canvas id="expandedFeed" width="512" height="288" aria-label="Live PTZ video"></canvas>
+      <div class="screen-actions">
+      <button id="manualPtzButton" type="button" aria-pressed="false">MANUAL PTZ</button>
+      <div id="manualPtzControls" hidden>
+        <button id="manualSensorMode" type="button">VISIBLE · SWITCH TO THERMAL</button>
+        <div class="ptz-pad" aria-label="Manual camera controls">
+          <button type="button" data-ptz-pan="-1" data-ptz-tilt="0" aria-label="Pan left">←</button>
+          <button type="button" data-ptz-pan="0" data-ptz-tilt="1" aria-label="Tilt up">↑</button>
+          <button type="button" data-ptz-pan="0" data-ptz-tilt="-1" aria-label="Tilt down">↓</button>
+          <button type="button" data-ptz-pan="1" data-ptz-tilt="0" aria-label="Pan right">→</button>
+        </div>
+        <p id="manualPtzBearing" aria-live="polite"></p>
+        <small>Tap arrows to aim. Auto resumes tracking or scanning.</small>
+      </div>
+      <div id="expandedControls" class="expanded-controls"></div>
+      <small id="touchscreenFootnote">Vehicle touchscreen · command-center transmission is simulated</small>
+      </div>
+    </dialog>
+    <div id="ptzScanReadout" class="ptz-scan-readout" hidden><span id="ptzScanArrow" aria-hidden="true">↑</span><div><strong id="ptzScanStatus">PTZ STANDBY</strong><small id="ptzScanAngle">0° · VEHICLE RELATIVE</small></div></div>
+
+    <section id="startPanel" class="start-panel">
+      <p class="eyebrow">TACTIXGLOBAL · INTERACTIVE SCENARIOS</p>
+      <h1>Choose your scenario</h1>
+      <div class="scenario-cards">
+        <article><h2>Night Patrol</h2><p>Join the patrol, detect a concealed person and review a recorded thermal clip.</p><button id="enterButton" class="suggested-action" disabled>LOADING…</button></article>
+        <article><h2>Air Contact</h2><p>Acquire and track a quadcopter, then authorize an interceptor launch demonstration. No interception is shown.</p><button id="interceptionButton" class="suggested-action" disabled>LOADING…</button></article>
+      </div>
+      <small>Mouse or touch · Choose a scenario to begin</small>
+    </section>
+
+    <section id="completionPanel" class="completion-panel" aria-labelledby="completionTitle" hidden>
+      <div class="completion-card"><p>TACTIXGLOBAL · NIGHT PATROL</p><h2 id="completionTitle">Scenario complete</h2>
+      <ul id="completionSummary"></ul><div class="completion-actions">
+      <button id="replayScenario" type="button">REPLAY SCENARIO</button><button id="viewRecordedClip" type="button">VIEW RECORDED CLIP</button><button id="exitScenario" type="button" title="Leave fullscreen and return to the start screen">EXIT TO START</button>
+      </div><small>Illustrative simulation · Classification remained unconfirmed.</small></div>
+    </section>
+    <dialog id="recordedClipDialog" class="recorded-clip-dialog" aria-label="Recorded activity clip"><button id="closeRecordedClip" type="button">CLOSE</button><video id="recordedClipPlayer" controls playsinline></video></dialog>
+    <div id="entryFade" class="entry-fade" aria-hidden="true"></div>
+    <section id="vehicleEntryPrompt" class="vehicle-entry-prompt" aria-live="polite" hidden>
+      <span>DRIVER DOOR</span>
+      <button id="vehicleEntryButton" type="button">Press E to Enter Vehicle</button>
+    </section>
+
+    <section class="mission-hud" aria-live="polite">
+      <div><span>STATE</span><strong id="stateLabel">LOADING</strong></div>
+      <div><span>MISSION</span><strong id="missionLabel">SELECT SCENARIO</strong></div>
+      <div><span>SENTRY</span><strong id="sentryLabel">STANDBY</strong></div>
+    </section>
+
+    <div id="contactAlert" class="contact-alert" hidden>
+      <span>THERMAL CONTACT</span>
+      <strong>PERSON 1 · AHEAD RIGHT</strong>
+      <small>Crouching · partly concealed · intent unconfirmed</small>
+    </div>
+
+    <div id="sensorFrame" class="sensor-frame" hidden>
+      <div class="sensor-head"><span id="sensorTitle">SENTRY ONE PTZ · THERMAL</span><b>LIVE</b></div>
+      <div class="reticle"></div>
+      <div class="sensor-foot"><span id="sensorTarget">NO TARGET</span><span id="sensorMode">SCAN</span></div>
+    </div>
+
+    <aside id="console" class="console" hidden>
+      <div class="console-head">
+        <div><span>TACTIXGLOBAL</span><strong>NIGHT PATROL</strong></div>
+        <i id="consoleClock">00:00:00</i>
+      </div>
+
+      <section class="vehicle-readouts" aria-label="Vehicle status">
+        <div><span>SPEED</span><strong id="speedLabel">0 km/h</strong></div>
+        <div><span>HEADING</span><strong>184° S</strong></div>
+        <div><span>SENSOR LINK</span><strong class="healthy">NOMINAL</strong></div>
+        <div><span>MODE</span><strong id="driveModeLabel">PARK</strong></div>
+      </section>
+
+      <section class="system-message">
+        <span>SYSTEM</span>
+        <p id="systemMessage">Operator seated. Patrol starts automatically.</p>
+      </section>
+
+      <section class="track-panel" hidden>
+        <header><span>TRACKS</span><small id="trackCount">0 ACTIVE</small></header>
+        <div id="emptyTracks" class="empty-track">No contacts detected.</div>
+        <div id="personTrack" class="track" hidden>
+          <b>PERSON 1</b><span id="trackConfidence">0.62</span><em id="trackState">DETECTED</em>
+        </div>
+      </section>
+
+      <div class="actions">
+        <button id="patrolButton" hidden>PATROL AUTOMATIC</button>
+        <button id="thermalButton" disabled>VIEW PTZ THERMAL</button>
+        <button id="trackButton" disabled>TRACK CONTACT</button>
+        <button id="ignoreButton" class="secondary" disabled>DISMISS</button>
+      </div>
+
+      <p class="disclaimer">Prototype UI and hardware geometry. Mission behaviour is deterministic.</p>
+    </aside>
+
+    <div id="lookHint" class="look-hint" hidden>DRAG TO LOOK AROUND</div>
+    <div class="windshield-vignette" aria-hidden="true"></div>
+    <div class="prototype-tag">SIMULATION · PLACEHOLDER HARDWARE</div>
+  </main>
+
+  <script src="vendor/three-0.128.0/three.min.js"></script>
+  <script src="vendor/three-0.128.0/GLTFLoader.js"></script>
+  <script src="js/launch-audio.js?v=sky-2"></script>
+  <script src="us/simulator.js?v=us-7"></script>
+</body>
+</html>

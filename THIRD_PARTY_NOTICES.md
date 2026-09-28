@@ -24,3 +24,9 @@ Author: https://sketchfab.com/aurumjuda747
 License: https://creativecommons.org/licenses/by/4.0/
 Original supplied GLB retained in assets/source/air-contact (authoring repository only).
 Modified for this simulator: joined static meshes, decimated geometry, resized textures, centered origin. Actual source dimensions preserved. Runtime asset: assets/models/air_contact_quadcopter.glb. Product shape does not establish manufacturer classification in the scenario.
+
+## US-region SUV
+
+Police Interceptor SUV by 3dmi, purchased source supplied by the owner from CGTrader: https://www.cgtrader.com/3d-models/car/suv/police-interceptor-suv . Owner confirmed license clearance. This records that confirmation and grants no independent model redistribution rights to visitors. Source masters stay in the private authoring repository. US runtime adaptations: metre scale/orientation, wheel separation, materials, enlarged existing computer screen, measured roof platform, driver sockets and live instrument texture. Runtime asset: assets/models/us_police_suv.glb.
+
+US hooded NPC reuses the credited hooded source with project-authored Walk, StandToCrouch and kneeling idle poses; original rig/skinning retained. Runtime asset: assets/models/us_hooded_npc.glb.
