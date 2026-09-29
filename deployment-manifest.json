@@ -93,8 +93,10 @@
     "us/audio/narration/seated.mp3": "edabc749ddb4922cab76071c320daf986fc2de220cb466e2025d555a91306972",
     "us/audio/narration/thermal.mp3": "1a4ad0419cdd0d9edc351e96e8dca6d8ac2e89212a82ff9364bca9ed56c750de",
     "us/audio/narration/tracking.mp3": "8074a9bc296dafc21e787b252ccf164ca3fc96dc3917e5a4bb70649ba056489a",
-    "us/index.html": "8d895bc776b90a91db8bd3a17561176a56c7dc1f7f7a6fc2d4935305117bf5b4",
-    "us/simulator.js": "5779d6a11aa92c58d08a535b152135b9ba2ca99767d5b8f23e12f0070a742695",
+    "us/environment.js": "e828ada42de382fc7afa700a96ab1e73c0e605da4a57198a6a89406a0527fe2b",
+    "us/index.html": "e6a95b931086cab40ea3f6b384f0af4b9250f97e4063b48d487b4d595942b2ab",
+    "us/simulator.js": "07ce4f2a9677a5435cc820ea0059a11ac20cb6482b2744311bb89a5cfeae83ad",
+    "us/spatial-ray.js": "a020e391d8467d900fd2101454277fe1c6d3c0849607075cf530902329fdbf85",
     "vendor/three-0.128.0/GLTFLoader.js": "5c15967ba830918a9caea6338712c994c354bccd4edc4569bde411c3ec06a3e6",
     "vendor/three-0.128.0/LICENSE": "7dddf7c5b8fd10ee654db8857d75d104b5557889aa5a91fc4ca545ea7c07062f",
     "vendor/three-0.128.0/three.min.js": "9274bbcec8d96168626c732b5d31c775aa8cfb7eaa0599bec0c175908a2c1ce2"

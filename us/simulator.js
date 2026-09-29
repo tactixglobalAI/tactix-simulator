@@ -74,7 +74,7 @@
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x171821);
-  scene.fog = new THREE.FogExp2(0x69627c, 0.006);
+  scene.fog = new THREE.FogExp2(0x6e7a80, 0.006);
 
   // Camera-relative sky: no translation/parallax, including the independent PTZ.
   // Analytic colours and crescent need no texture downloads or extra render pass.
@@ -82,10 +82,10 @@
     new THREE.ShaderMaterial({
       side: THREE.BackSide, depthWrite: false, fog: false,
       uniforms: {
-        horizon: { value: new THREE.Color(0xf1ad79).convertSRGBToLinear() },
-        rose: { value: new THREE.Color(0xaa759c).convertSRGBToLinear() },
-        blue: { value: new THREE.Color(0x34588f).convertSRGBToLinear() },
-        zenith: { value: new THREE.Color(0x082956).convertSRGBToLinear() },
+        horizon: { value: new THREE.Color(0xb9aaa0).convertSRGBToLinear() },
+        rose: { value: new THREE.Color(0x829096).convertSRGBToLinear() },
+        blue: { value: new THREE.Color(0x536f83).convertSRGBToLinear() },
+        zenith: { value: new THREE.Color(0x233b51).convertSRGBToLinear() },
         moonDirection: { value: new THREE.Vector3(-.20, .43, -1).normalize() }
       },
       vertexShader: `varying vec3 skyDirection;
@@ -222,98 +222,7 @@
   dusk.position.set(20, 12, -80);
   scene.add(dusk);
 
-  const roadMat = new THREE.MeshStandardMaterial({ color: 0x17191e, roughness: 0.96 });
-  const road = new THREE.Mesh(new THREE.PlaneGeometry(11, 420), roadMat);
-  road.rotation.x = -Math.PI / 2;
-  road.position.set(0, 0, -180);
-  road.receiveShadow = true;
-  scene.add(road);
-
-  const vergeMat = new THREE.MeshStandardMaterial({ color: 0x17221a, roughness: 1 });
-  const surroundingGround=new THREE.Mesh(new THREE.PlaneGeometry(2000,2000),vergeMat);
-  surroundingGround.name='SurroundingTerrain';surroundingGround.rotation.x=-Math.PI/2;
-  surroundingGround.position.set(0,-.025,-180);scene.add(surroundingGround);
-  [-1, 1].forEach(side => {
-    const verge = new THREE.Mesh(new THREE.PlaneGeometry(18, 420), vergeMat);
-    verge.rotation.x = -Math.PI / 2;
-    verge.position.set(side * 14.5, -0.02, -180);
-    scene.add(verge);
-  });
-
-  const lineMat = new THREE.MeshBasicMaterial({ color: 0xc8a84c });
-  for (let z = 12; z > -390; z -= 13) {
-    const line = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 5.8), lineMat);
-    line.rotation.x = -Math.PI / 2;
-    line.position.set(0, 0.015, z);
-    scene.add(line);
-  }
-
-  function makeHouse(x, z, variant) {
-    const g = new THREE.Group();
-    const wallColors = [0x66564f, 0x505c65, 0x665f4d, 0x53515b];
-    const walls = new THREE.Mesh(
-      new THREE.BoxGeometry(7 + variant, 3.2, 5.4),
-      new THREE.MeshStandardMaterial({ color: wallColors[variant % wallColors.length], roughness: 0.92 })
-    );
-    walls.position.y = 1.6;
-    walls.castShadow = true;
-    const roof = new THREE.Mesh(
-      new THREE.ConeGeometry(5.3 + variant * 0.2, 2.1, 4),
-      new THREE.MeshStandardMaterial({ color: 0x241d21, roughness: 1 })
-    );
-    roof.position.y = 4.2;
-    roof.rotation.y = Math.PI / 4;
-    const windowMat = new THREE.MeshBasicMaterial({ color: 0xffc77b });
-    for (let wx = -1.8; wx <= 1.8; wx += 3.6) {
-      const win = new THREE.Mesh(new THREE.PlaneGeometry(1.25, 1.0), windowMat);
-      win.position.set(wx, 2.0, x > 0 ? -2.71 : 2.71);
-      win.rotation.y = x > 0 ? Math.PI : 0;
-      g.add(win);
-    }
-    g.add(walls, roof);
-    g.position.set(x, 0, z);
-    scene.add(g);
-  }
-
-  function makeTree(x, z, scale) {
-    const g = new THREE.Group();
-    const trunk = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.2 * scale, 0.28 * scale, 2.4 * scale, 8),
-      new THREE.MeshStandardMaterial({ color: 0x35251d, roughness: 1 })
-    );
-    trunk.position.y = 1.2 * scale;
-    const crown = new THREE.Mesh(
-      new THREE.IcosahedronGeometry(1.25 * scale, 1),
-      new THREE.MeshStandardMaterial({ color: 0x182d20, roughness: 1 })
-    );
-    crown.position.y = 3.0 * scale;
-    g.add(trunk, crown);
-    g.position.set(x, 0, z);
-    scene.add(g);
-  }
-
-  for (let z = -18, i = 0; z > -340; z -= 27, i++) {
-    makeHouse(-16 - (i % 2) * 2, z, i % 3);
-    makeHouse(16 + ((i + 1) % 2) * 2, z - 8, (i + 1) % 3);
-    makeTree(-9.5, z + 7, 0.85 + (i % 3) * 0.12);
-    makeTree(9.5, z - 2, 0.9 + ((i + 1) % 3) * 0.1);
-  }
-
-  const lampPoleMaterial=new THREE.MeshStandardMaterial({color:0x252b33,roughness:.85});
-  const lampGlowMaterial=new THREE.MeshBasicMaterial({color:0xffce83});
-  for(let i=0;i<10;i++) {
-    const x=i%2 ? -6.4 : 6.4, z=-12-i*30;
-    const pole=new THREE.Mesh(new THREE.CylinderGeometry(.065,.09,4.2,8),lampPoleMaterial);
-    pole.position.set(x,2.1,z);scene.add(pole);
-    const lantern=new THREE.Mesh(new THREE.CylinderGeometry(.16,.12,.32,6),lampGlowMaterial);
-    lantern.position.set(x,4.25,z);scene.add(lantern);
-    const cap=new THREE.Mesh(new THREE.ConeGeometry(.23,.16,6),lampPoleMaterial);
-    cap.position.set(x,4.49,z);scene.add(cap);
-    if(i<2) {
-      const light=new THREE.PointLight(0xffb85f,.85,15,2);
-      light.position.set(x,4.15,z);scene.add(light);
-    }
-  }
+  const industrialEnvironment=buildUSIndustrialEnvironment(scene);
 
   function human(color) {
     const g = new THREE.Group();
@@ -997,7 +906,7 @@
       const lens=new THREE.Mesh(new THREE.CircleGeometry(.018,24),new THREE.MeshStandardMaterial({color:0x305b72,metalness:.65,roughness:.18,side:THREE.DoubleSide}));
       lens.name='PtzLensFace';lens.rotation.y=Math.PI;lens.position.z=-.012;ptzOptical.add(lens);
       roofHardware.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});
-      roofHardware.updateMatrixWorld(true);updateSensorCamera();done();
+      roofHardware.updateMatrixWorld(true);TactixSightline.prepare(cockpit);updateSensorCamera();done();
     }).catch(error=>{console.error('Roof hardware load failed',error);el.enter.textContent='ROOF HARDWARE LOAD FAILED — RELOAD';});
   }
 
@@ -1554,6 +1463,7 @@
 
   function showContact() {
     if (contactTriggered) return;
+    const detectionWorkStart=performance.now();
     contactTriggered = true;
     setState(STATES.TRACKING);
     el.sentry.textContent = "AUTO TRACK";
@@ -1573,8 +1483,10 @@
     document.querySelector('.track-panel').hidden = false;
     el.trackState.textContent = 'AUTO TRACK · UNCONFIRMED';
     observationPlan=planObservationStop();
+    window.__patrolTiming={planMs:performance.now()-detectionWorkStart};
     approachTracking=false;nextSightCheck=0;officerSlowPending=true;officerSlowAt=patrolElapsed+7.25;
     startEventRecording();
+    window.__patrolTiming.recordStartMs=performance.now()-detectionWorkStart-window.__patrolTiming.planMs;
     alertTone();
     const cue=contactBearing(contact.getWorldPosition(new THREE.Vector3()));
     if(detectionEvidence)detectionEvidence.clockCue=cue;
@@ -2330,13 +2242,7 @@
   }
 
   function opaqueSightline(eye,target) {
-    const delta=target.clone().sub(eye);
-    const ray=new THREE.Raycaster(eye,delta.clone().normalize(),.02,Math.max(.02,delta.length()-.1));
-    return !ray.intersectObjects([cockpit,vegetation],true).some(hit=>{
-      for(let node=hit.object;node;node=node.parent)if(!node.visible)return false;
-      const material=Array.isArray(hit.object.material)?hit.object.material[hit.face.materialIndex]:hit.object.material;
-      return material && !(material.transparent && material.opacity<.5);
-    });
+    return !TactixSightline.blocked(cockpit,eye,target) && !new THREE.Raycaster(eye,target.clone().sub(eye).normalize(),.02,eye.distanceTo(target)-.1).intersectObject(vegetation,true).length;
   }
 
   function planObservationStop() {
