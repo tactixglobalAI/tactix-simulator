@@ -1006,9 +1006,10 @@
     },delay);
   }
 
-  function keepClipLocal() {
+  function keepClipLocal(automatic=false) {
     if(eventClip.status!=='READY')return;
     eventClip.status='KEPT_LOCAL';
+    if(automatic){eventClip.decisionTimedOut=true;setMessage('No response. Clip kept locally. Continuing patrol.',false);}
     for(let i=narrationQueue.length-1;i>=0;i--)if(narrationQueue[i].startsWith('Activity clip recorded.'))narrationQueue.splice(i,1);
     returnToObservation(800);
   }
@@ -1918,7 +1919,7 @@
       return {pixelRatio:renderer.getPixelRatio(),buttonPixel:Array.from(pixels),screenSize:[touchscreenUI.target.width,touchscreenUI.target.height]};
     },
     speedometerSnapshot() {return {patrolFinaleTime,departureElapsed,observationPhase,plan:observationPlan?{stop:observationPlan.stop.toArray(),ahead:observationPlan.ahead,bearing:observationPlan.bearing,visibleSamples:observationPlan.visibleSamples,brakingDistance:observationPlan.brakingDistance,fallback:observationPlan.fallback}:null,approachTracking,postSendObservation,driverSightClear,personObservationTime,clipMonitorAttention,yaw,pitch,value:originalSpeedometer?.last,extraDisplayVisible:cockpit?.getObjectByName("InstrumentClusterSurface")?.visible,officerSlowPending,officerSlowAt};},
-    eventSnapshot() {return {status:eventClip.status,sentAt:eventClip.sentAt,sendStarted:eventClip.sendStarted,bytes:eventClip.blob?.size||0,url:eventClip.url,frames:eventClip.frames,error:eventClip.error,driverSpeedTarget,vehicleSpeed};},
+    eventSnapshot() {return {status:eventClip.status,decisionElapsed:eventClip.decisionElapsed||0,decisionTimedOut:!!eventClip.decisionTimedOut,sentAt:eventClip.sentAt,sendStarted:eventClip.sendStarted,bytes:eventClip.blob?.size||0,url:eventClip.url,frames:eventClip.frames,error:eventClip.error,driverSpeedTarget,vehicleSpeed};},
     driverSpeed(speed) {if(debugEntry && [0,OBSERVATION_SPEED,PATROL_SPEED].includes(speed))setDriverSpeed(speed);},
     clipChoice(choice) {if(!debugEntry)return;if(choice==='SEND')simulateClipSend();if(choice==='KEEP')keepClipLocal();},
     vehicleMotionSnapshot() {
@@ -2419,8 +2420,13 @@
     if(observationPhase==='OBSERVING' && !expandedDialog.open && !clipMonitorAttention && settledPersonSightline())personObservationTime+=dt;
     if(postSendObservation && personObservationTime>=5)proceedPatrol();
     if(eventClip.status==='RECORDED' && (personObservationTime>=6 || observationPhase==='RESUMING' || state===STATES.DISMISSED)) {
-      eventClip.status='READY';clipMonitorAttention=observationPhase==='OBSERVING';manualLookUntil=0;
+      eventClip.status='READY';eventClip.decisionElapsed=0;clipMonitorAttention=observationPhase==='OBSERVING';manualLookUntil=0;
       setMessage('Activity clip recorded. Send the clip to the command center?',true);
+    }
+    // Give the operator four visible seconds after narration finishes.
+    if(eventClip.status==='READY' && !narrationBusy && !narrationQueue.length && !document.hidden){
+      eventClip.decisionElapsed=(eventClip.decisionElapsed||0)+dt;
+      if(eventClip.decisionElapsed>=4)keepClipLocal(true);
     }
     const remaining=remainingObservationDistance();
     const brakingForContact=officerSlowPending || observationPhase==='STOPPING';
@@ -2532,11 +2538,42 @@
   window.visualViewport?.addEventListener('resize',resize);
   new ResizeObserver(resize).observe(el.stage);
   const fullscreenButton=document.getElementById('fullscreenButton');
+  const mobileView=window.matchMedia('(max-width: 950px)');
+  const phoneInput=()=>navigator.maxTouchPoints>0 || window.matchMedia('(pointer: coarse)').matches;
+  const orientationHint=document.createElement('aside');orientationHint.className='phone-orientation-hint';orientationHint.hidden=true;
+  orientationHint.setAttribute('role','status');orientationHint.innerHTML='<span>For a wider view, rotate your phone sideways.</span><button type="button" aria-label="Dismiss rotation hint">×</button>';
+  document.body.append(orientationHint);
+  let rotationHintTimer;
+  orientationHint.querySelector('button').onclick=()=>{orientationHint.hidden=true;};
+  function showRotationHint(){
+    if(!phoneInput() || innerWidth>=innerHeight)return;
+    orientationHint.hidden=false;clearTimeout(rotationHintTimer);
+    rotationHintTimer=setTimeout(()=>{orientationHint.hidden=true;},7000);
+  }
+  function placeFullscreenButton(){
+    const menu=document.querySelector('.view-options-panel'),nav=document.querySelector('.topbar nav');
+    if(mobileView.matches)nav.insertBefore(fullscreenButton,document.getElementById('viewOptions'));
+    else menu.prepend(fullscreenButton);
+    if(innerWidth>=innerHeight)orientationHint.hidden=true;
+  }
+  mobileView.addEventListener('change',placeFullscreenButton);window.addEventListener('resize',placeFullscreenButton);placeFullscreenButton();
+  async function preferLandscape(){
+    try{await screen.orientation?.lock('landscape');}catch(_){}
+    showRotationHint();
+  }
+  async function enterMobileFullscreen(){
+    if(!phoneInput() || !mobileView.matches)return;
+    try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen?.({navigationUI:'hide'});}catch(_){}
+    await preferLandscape();
+  }
+  document.addEventListener('click',event=>{
+    if(event.target.closest('#enterButton,#systemsTourButton,#interceptionButton') && state===STATES.READY)enterMobileFullscreen();
+  },true);
   fullscreenButton.classList.add('fullscreen-suggestion');
   fullscreenButton.addEventListener('click',async()=>{
     try {
       if(document.fullscreenElement)await document.exitFullscreen();
-      else if(document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen({navigationUI:'hide'});
+      else if(document.documentElement.requestFullscreen){await document.documentElement.requestFullscreen({navigationUI:'hide'});if(phoneInput())await preferLandscape();}
       else throw new Error('Fullscreen unavailable');
     } catch(_) {
       const hint=document.getElementById('fullscreenHint');

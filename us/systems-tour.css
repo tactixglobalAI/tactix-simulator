@@ -44,3 +44,7 @@
 
 .tour-device-label { position:absolute; padding:6px 10px; background:rgba(7,16,24,.72); color:#e5f6ff; border:1px solid #8ca9b777; font:11px monospace; letter-spacing:1px; pointer-events:none; }
 .tour-device-label[hidden] { display:none; }
+.phone-orientation-hint { position:fixed; z-index:70; left:12px; right:12px; top:112px; display:flex; align-items:center; gap:12px; padding:6px 10px; color:#e5f6ff; background:rgba(7,16,24,.96); border:1px solid #6b8798; font:13px sans-serif; }
+.phone-orientation-hint[hidden] { display:none; }
+.phone-orientation-hint button { min-width:44px; min-height:44px; margin-left:auto; font-size:22px; }
+@media(max-width:950px){ .topbar nav { align-items:center; gap:6px; } .topbar nav > #fullscreenButton { font-size:9px; padding:6px; } }
