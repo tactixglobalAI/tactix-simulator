@@ -1,0 +1,34 @@
+{
+  "engine": "Kokoro 0.9.4",
+  "model": "hexgrad/Kokoro-82M",
+  "revision": "f3ff3571791e39611d31c381e3a41a3af07b4987",
+  "voice": "am_michael",
+  "speed": 0.96,
+  "sample_rate": 24000,
+  "clips": {
+    "Edge computer": {
+      "file": "us/audio/tour/01_edge.mp3?v=7f56906582a9",
+      "spoken_text": "Behind the display, the edge A I computer coordinates the vehicle's mission systems.",
+      "seconds": 6.35,
+      "sha256": "7f56906582a961e99b73de59af0a06c4707a0ec9a9fda04f92768ad2a65feee9"
+    },
+    "Mission orchestration": {
+      "file": "us/audio/tour/02_workflow.mp3?v=9d91b04f1ae8",
+      "spoken_text": "Onboard A I coordinates sensing, tracking and recording. You give voice commands. The system responds, asks what's next, and confirms actions. A I processing runs locally, without cloud inference.",
+      "seconds": 15.05,
+      "sha256": "9d91b04f1ae8aee0ebb007309c66def11dfa0e0024eb6f800b485855344cd96c"
+    },
+    "PTZ": {
+      "file": "us/audio/tour/03_ptz.mp3?v=e63d297e91c8",
+      "spoken_text": "The roof mounted P T Z combines R G B and thermal imaging, with automatic tracking.",
+      "seconds": 7.075,
+      "sha256": "e63d297e91c891174c9820774e5a577e156bd5c0a7ee90d05fd7449bbc7bca05"
+    },
+    "Recon drone": {
+      "file": "us/audio/tour/04_recon.mp3?v=3fecc1099551",
+      "spoken_text": "The vehicle carries a reconnaissance drone. Launch requires operator confirmation.",
+      "seconds": 6.55,
+      "sha256": "3fecc1099551166bca015870a0344e1512aa257dad93fabc53852c955c8a30b1"
+    }
+  }
+}

@@ -170,6 +170,7 @@
   let officerSlowAt=null,officerSlowPending=false;
   let departureElapsed=null, patrolFinaleTime=null;
   let observationPlan=null;
+  let systemsTour=null, systemsTourSelected=false;
   let personObservationTime=0, automaticPatrolAt=null, driverSightClear=false, nextSightCheck=0, postSendObservation=false, approachTracking=false;
   let clipMonitorAttention=false, clipReturnTimer=null;
   let observationPhase="NONE", resumeLookTime=0, manualLookUntil=0, screenAttention=false;
@@ -1304,9 +1305,12 @@
     if (entryDoor) entryDoor.rotation.y = 0;
     el.enter.disabled = false;
     el.enter.textContent = "START PATROL";
+    document.getElementById("systemsTourButton").disabled=false;
+    document.getElementById("systemsTourButton").textContent="PREVIEW SYSTEMS TOUR";
     document.getElementById("interceptionButton").disabled=false;
     document.getElementById("interceptionButton").textContent="START AIR CONTACT";
     if(sessionStorage.getItem("tactixReplay")==="interception"){sessionStorage.removeItem("tactixReplay");setTimeout(beginInterception,0);}
+    if(sessionStorage.getItem("tactixReplay")==="systems-tour"){sessionStorage.removeItem("tactixReplay");setTimeout(()=>document.getElementById("systemsTourButton").click(),0);}
     characterController.vehicleCollision = true;
     characterController.cabinCollisionIgnored = false;
     operator.visible = true;
@@ -1404,7 +1408,8 @@
     el.console.hidden = true;
     el.lookHint.hidden = false;
     setTimeout(() => { el.lookHint.hidden = true; }, 3500);
-    setMessage("Operator seated.", true);
+    setMessage("Operator seated.", !systemsTourSelected);
+    if(systemsTourSelected){sensorVisible=true;sensorThermal=false;systemsTour.start();}
   }
 
   // The gate is checked both when showing the prompt and on activation.
@@ -1542,11 +1547,13 @@
     setMessage("Contact dismissed by the operator. Sentry One PTZ has resumed its scan.", true);
   }
 
-  el.enter.addEventListener("click",()=>{selectedScenario="patrol";beginIntro();});
+  el.enter.addEventListener("click",()=>{systemsTourSelected=false;selectedScenario="patrol";beginIntro();});
+  document.getElementById("systemsTourButton").addEventListener("click",()=>{if(state!==STATES.READY)return;systemsTourSelected=true;systemsTour.prepare();selectedScenario="patrol";beginIntro();});
   document.getElementById("interceptionButton").addEventListener("click",beginInterception);
 
   async function beginInterception(){
     if(state!==STATES.READY)return;
+    systemsTourSelected=false;document.getElementById("systemsTourButton").disabled=true;
     prepareNarration();window.TactixLaunchAudio?.prepare();
     const button=document.getElementById('interceptionButton');button.disabled=true;el.enter.disabled=true;button.textContent='LOADING AIR CONTACT…';
     try {
@@ -1748,6 +1755,7 @@
   }
 
   function beginPatrol() {
+    if(systemsTour?.active)return;
     if (state !== STATES.VEHICLE_FIRST_PERSON && state !== STATES.DISMISSED) return;
     driverSpeedTarget=PATROL_SPEED;officerSlowPending=false;officerSlowAt=null;observationPhase="NONE";observationPlan=null;
     patrolStartedAt = performance.now();
@@ -1862,6 +1870,7 @@
   });
 
   window.__tactixEntryDebug = {
+    systemsTourSnapshot(){return {...systemsTour.snapshot(),selected:systemsTourSelected,vehicle:vehicle.position.toArray(),speed:vehicleSpeed,thermal:sensorThermal};},
     sensorTrackingSnapshot(){
       const bounds=reconRig?new THREE.Box3().setFromObject(reconRig):null;
       return {track:sensorTrack,rotors:airContactRotors.map(({pivot})=>({name:pivot.name,quaternion:pivot.quaternion.toArray(),position:pivot.getWorldPosition(new THREE.Vector3()).toArray()})),reconVisible:reconRig?.visible,interceptorVisible:interceptorRig?.visible,recon:bounds?{min:bounds.min.toArray(),max:bounds.max.toArray(),ptzOverlap:bounds.intersectsBox(new THREE.Box3().setFromObject(ptzRig)),deckBottom:bounds.min.y-vehicle.position.y}:null,cameraFov:camera.fov,voice:narrationBuffers.size};
@@ -1980,7 +1989,7 @@
     placeOfficer(localPosition) {
       if (!debugEntry) return false;
       operator.position.copy(vehiclePoint(localPosition));
-      if(!debugPaused && selectedScenario==="patrol" && state===STATES.VEHICLE_FIRST_PERSON) {
+      if(!debugPaused && !systemsTour?.active && selectedScenario==="patrol" && state===STATES.VEHICLE_FIRST_PERSON) {
       if(automaticPatrolAt===null)automaticPatrolAt=now+1000;
       if(now>=automaticPatrolAt){automaticPatrolAt=null;beginPatrol();}
     } else automaticPatrolAt=null;
@@ -2131,7 +2140,7 @@
       if (u >= 1) {
         playOperatorAction('Idle',true,.2);
         setState(STATES.VEHICLE_ENTRY_AVAILABLE);
-        if(!debugPaused && selectedScenario==="patrol" && state===STATES.VEHICLE_FIRST_PERSON) {
+        if(!debugPaused && !systemsTour?.active && selectedScenario==="patrol" && state===STATES.VEHICLE_FIRST_PERSON) {
       if(automaticPatrolAt===null)automaticPatrolAt=now+1000;
       if(now>=automaticPatrolAt){automaticPatrolAt=null;beginPatrol();}
     } else automaticPatrolAt=null;
@@ -2160,6 +2169,7 @@
 
   let observationFraming=0, operatorCameraStamp=0;
   function updateOperatorCamera(now) {
+    if(systemsTour?.active)return;
     if (!operatorEye) return;
     const stamp=performance.now(), cameraDt=operatorCameraStamp?Math.min((stamp-operatorCameraStamp)/1000,.1):0;
     operatorCameraStamp=stamp;
@@ -2357,7 +2367,7 @@
     document.getElementById('completionPanel').hidden=false;
     document.getElementById('replayScenario').focus();
   }
-  document.getElementById('replayScenario').addEventListener('click',()=>{if(selectedScenario==='interception')sessionStorage.setItem('tactixReplay','interception');location.reload();});
+  document.getElementById('replayScenario').addEventListener('click',()=>{if(selectedScenario==='interception')sessionStorage.setItem('tactixReplay','interception');else if(systemsTourSelected)sessionStorage.setItem('tactixReplay','systems-tour');location.reload();});
   document.addEventListener('visibilitychange',()=>window.TactixLaunchAudio?.setPaused(document.hidden));
   document.getElementById('exitScenario').addEventListener('click',async()=>{
     window.TactixLaunchAudio?.stop();
@@ -2642,7 +2652,7 @@
     if (!debugPaused && [STATES.EXTERIOR_THIRD_PERSON,STATES.VEHICLE_ENTRY_TRANSITION].includes(state)) {
       updateIntro(now);
     }
-    if(!debugPaused && selectedScenario==="patrol" && state===STATES.VEHICLE_FIRST_PERSON) {
+    if(!debugPaused && !systemsTour?.active && selectedScenario==="patrol" && state===STATES.VEHICLE_FIRST_PERSON) {
       if(automaticPatrolAt===null)automaticPatrolAt=now+1000;
       if(now>=automaticPatrolAt){automaticPatrolAt=null;beginPatrol();}
     } else automaticPatrolAt=null;
@@ -2676,12 +2686,37 @@
     renderSensorView();
     renderTouchscreen();
     updateExpandedTouchscreen(now);
+    if(systemsTour?.active){systemsTour.update(elapsed);el.viewToggle.hidden=true;document.getElementById("expandTouchscreen").hidden=true;}
     renderer.setViewport(0, 0, el.stage.clientWidth, el.stage.clientHeight);
     renderer.setScissorTest(false);
     renderer.render(scene, camera);
     // PTZ imagery is displayed on the mounted touchscreen, not a floating popup.
   }
 
+  systemsTour=createSystemsTour({stage:el.stage,camera,
+    pose(index,cut,anchorOnly=false){
+      // Mark the rear upper edge in world metres; the imported display's
+      // vertex coordinates are baked, so local unit offsets are not its height.
+      const screenBounds=new THREE.Box3().setFromObject(touchscreenSurface);
+      const rearAnchor=screenBounds.getCenter(new THREE.Vector3());
+      rearAnchor.y=screenBounds.max.y+.022;rearAnchor.z-=.09;
+      const anchor=index<2?rearAnchor:index===2?vehiclePoint([0,2.14,-.18]):vehiclePoint([0,2.10,1.35]);
+      if(anchorOnly)return anchor;
+      const portrait=camera.aspect<1;
+      const position=index<2?operatorEye.getWorldPosition(new THREE.Vector3()):vehiclePoint(index===2?[-1.65,2.9,-2.0]:[-1.8,2.9,3.1]);
+      const look=index<2?touchscreenSurface.getWorldPosition(new THREE.Vector3()):anchor.clone();
+      if(portrait)look.y-=index<2?.28:.85;
+      camera.position.copy(position);camera.fov=portrait?85:60;camera.updateProjectionMatrix();camera.lookAt(look);
+      operator.visible=index>=2;
+      return anchor;
+    },
+    example(){sensorVisible=true;sensorThermal=true;},
+    finish(){
+      exteriorView=false;operator.visible=false;sensorVisible=false;sensorThermal=false;
+      automaticPatrolAt=performance.now()+1600;updateOperatorCamera(performance.now());
+      el.entryFade.style.opacity='1';setTimeout(()=>{el.entryFade.style.opacity='0';},120);
+    }
+  });
   loadNpc(() => loadOfficer(loadCockpit));
   requestAnimationFrame(animate);
 })();

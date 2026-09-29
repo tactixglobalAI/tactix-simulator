@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>TactixGlobal · US Operator Simulator</title>
   <link rel="stylesheet" href="styles.css?v=air-sky-4">
+  <link rel="stylesheet" href="us/systems-tour.css?v=1">
 </head>
 <body>
   <header class="topbar">
@@ -55,6 +56,7 @@
       <div class="scenario-cards">
         <article><h2>Night Patrol</h2><p>Join the patrol, detect a concealed person and review a recorded thermal clip.</p><button id="enterButton" class="suggested-action" disabled>LOADING…</button></article>
         <article><h2>Air Contact</h2><p>Acquire and track a quadcopter, then authorize an interceptor launch demonstration. No interception is shown.</p><button id="interceptionButton" class="suggested-action" disabled>LOADING…</button></article>
+        <article class="tour-preview-card"><h2>Patrol · Systems Tour</h2><p>Preview the onboard voice workflow and hardware after taking your seat, then continue the patrol.</p><button id="systemsTourButton" disabled>LOADING…</button><small>NEW PREVIEW · Existing scenarios retained</small></article>
       </div>
       <small>Mouse or touch · Choose a scenario to begin</small>
     </section>
@@ -136,6 +138,8 @@
   <script src="js/launch-audio.js?v=sky-2"></script>
   <script src="us/spatial-ray.js?v=1"></script>
   <script src="us/environment.js?v=1"></script>
-  <script src="us/simulator.js?v=us-10"></script>
+  <script src="us/tour-narration.js?v=1"></script>
+  <script src="us/systems-tour.js?v=2"></script>
+  <script src="us/simulator.js?v=us-11"></script>
 </body>
 </html>
