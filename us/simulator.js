@@ -2,7 +2,7 @@
   "use strict";
 
   const ASSETS = Object.freeze({
-    cockpit: "assets/models/us_police_suv.glb?v=us-4",
+    cockpit: "assets/models/us_police_suv.glb?v=driver-monitor-5",
     officer: "assets/models/tactical_officer_rigged.glb?v=5",
     npc: "assets/models/us_hooded_npc.glb?v=kneel-4",
     touchscreen: "assets/models/ptz_touchscreen_clean.glb?v=1",
@@ -894,7 +894,7 @@
 
   function installRoofHardware(done) {
     const load=url=>new Promise((resolve,reject)=>new THREE.GLTFLoader().load(url,resolve,undefined,reject));
-    Promise.all([load(ASSETS.roofPlatform),load(ASSETS.ptz),load(ASSETS.interceptor),load('assets/models/us_recon_docked.glb?v=1')]).then(([platform,ptz,interceptor,recon])=>{
+    Promise.all([load(ASSETS.roofPlatform),load(ASSETS.ptz),load(ASSETS.interceptor),load('assets/models/us_recon_docked.glb?v=matte-black-2')]).then(([platform,ptz,interceptor,recon])=>{
       roofHardware=new THREE.Group();roofHardware.name='InstalledRoofHardware';cockpit.add(roofHardware);
       // US-specific rack is part of the SUV asset.
       ptzRig=ptz.scene;ptzRig.name='InstalledPTZ';ptzRig.position.set(0,1.822,-.18);roofHardware.add(ptzRig);
@@ -2717,6 +2717,10 @@
       el.entryFade.style.opacity='1';setTimeout(()=>{el.entryFade.style.opacity='0';},120);
     }
   });
+  const viewOptions=document.getElementById('viewOptions');
+  viewOptions.addEventListener('click',event=>{if(event.target.closest('button'))viewOptions.open=false;});
+  document.addEventListener('pointerdown',event=>{if(!viewOptions.contains(event.target))viewOptions.open=false;});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape' && viewOptions.open){viewOptions.open=false;viewOptions.querySelector('summary').focus();}});
   loadNpc(() => loadOfficer(loadCockpit));
   requestAnimationFrame(animate);
 })();

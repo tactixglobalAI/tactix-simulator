@@ -1,4 +1,4 @@
-/* Bundled male guide voice. A single source prevents overlapping tour clips. */
+/* Bundled guide voice. A single source prevents overlapping tour clips. */
 window.createTourNarration=function(){
  const names=['Edge computer','Mission orchestration','PTZ','Recon drone'];
  let context,promise,source,index=0,offset=0,started=0,generation=0,waiting=false,finished=false,error=null,paused=false;
@@ -15,7 +15,7 @@ window.createTourNarration=function(){
   if(!promise)promise=(async()=>{
    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
    try{
-    const response=await fetch('us/audio/tour/manifest.json',{signal:controller.signal});if(!response.ok)throw Error('Tour voice manifest unavailable');
+    const response=await fetch('us/audio/tour/manifest.json?v=3',{signal:controller.signal});if(!response.ok)throw Error('Tour voice manifest unavailable');
     const manifest=await response.json();
     await Promise.all(names.map(async(name,i)=>{
      const response=await fetch(manifest.clips[name].file,{signal:controller.signal});if(!response.ok)throw Error('Tour voice clip unavailable');

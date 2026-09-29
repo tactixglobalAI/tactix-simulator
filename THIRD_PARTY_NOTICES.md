@@ -39,6 +39,6 @@ OAK-D S2 PoE camera appearance is project-authored from owner-provided product r
 
 US quadcopter derivative retains the above CC BY 4.0 attribution. Separate original blade meshes, motor-axis pivots and runtime swept disks were added in assets/models/us_air_contact_quadcopter.glb.
 
-US narration uses the same credited Kokoro model with af_heart American female voice weights; all US MP3s are local generated assets. No Google voice or service is used.
+US narration uses the same credited Kokoro model with af_heart American fefemale voice weights; all US MP3s are local generated assets. No Google voice or service is used.
 
-The optional US systems-tour preview uses Kokoro `am_michael` American male narration, generated locally at speed 0.96 from the same pinned model revision. Only rendered MP3s are delivered to browsers; there is no cloud speech service. Enclosure and Jetson reference images in `us/assets/systems-tour/` were supplied by the user for this preview; they are illustrative hardware references, not authored CAD or evidence of models running in the browser.
+The optional US systems-tour preview uses Kokoro `af_heart` American female narration, generated locally at speed 1.0 from the same pinned model revision. Only rendered MP3s are delivered to browsers; there is no cloud speech service. Enclosure and Jetson reference images in `us/assets/systems-tour/` were supplied by the user for this preview; they are illustrative hardware references, not authored CAD or evidence of models running in the browser.

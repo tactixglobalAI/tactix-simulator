@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>TactixGlobal · US Operator Simulator</title>
   <link rel="stylesheet" href="styles.css?v=air-sky-4">
-  <link rel="stylesheet" href="us/systems-tour.css?v=1">
+  <link rel="stylesheet" href="us/systems-tour.css?v=2">
 </head>
 <body>
   <header class="topbar">
@@ -14,19 +14,22 @@
       <span class="brand">TACTIX<span>GLOBAL</span></span>
       <span class="product">US REGION SIMULATOR</span>
     </div>
-    <nav>
-      <button id="fullscreenButton" type="button">FULLSCREEN</button>
-      <a href="https://tactixglobalai.github.io/tactixglobal-skywatch/">HOW IT WORKS</a>
-      <a class="active" href="us/">SIMULATOR</a>
+    <nav aria-label="View controls">
+      <details id="viewOptions" class="view-options">
+        <summary>VIEW <span aria-hidden="true">▾</span></summary>
+        <div class="view-options-panel">
+          <button id="fullscreenButton" type="button">FULLSCREEN</button>
+          <button id="expandTouchscreen" class="expand-touchscreen" type="button" hidden>ENLARGE DISPLAY</button>
+          <button id="vehicleViewToggle" class="vehicle-view-toggle" type="button" aria-pressed="false" hidden>EXTERIOR VIEW</button>
+        </div>
+      </details>
     </nav>
   </header>
 
   <main id="stage" class="stage">
     <p id="fullscreenHint" class="fullscreen-hint" role="status" hidden></p>
     <canvas id="scene" aria-label="Interactive vehicle operator simulation"></canvas>
-    <button id="vehicleViewToggle" class="vehicle-view-toggle" type="button" aria-pressed="false" hidden>EXTERIOR VIEW</button>
 
-    <button id="expandTouchscreen" class="expand-touchscreen" type="button" hidden>ENLARGE SCREEN</button>
     <dialog id="touchscreenDialog" class="touchscreen-dialog" aria-label="Expanded vehicle touchscreen">
       <header><strong>SENTRY ONE PTZ</strong><button id="closeTouchscreen" type="button" aria-label="Close touchscreen">CLOSE</button></header>
       <p id="expandedStatus" role="status"></p>
@@ -138,8 +141,8 @@
   <script src="js/launch-audio.js?v=sky-2"></script>
   <script src="us/spatial-ray.js?v=1"></script>
   <script src="us/environment.js?v=1"></script>
-  <script src="us/tour-narration.js?v=1"></script>
+  <script src="us/tour-narration.js?v=3"></script>
   <script src="us/systems-tour.js?v=2"></script>
-  <script src="us/simulator.js?v=us-11"></script>
+  <script src="us/simulator.js?v=us-12"></script>
 </body>
 </html>

@@ -1,4 +1,11 @@
 .tour-preview-card { border-color:#6aafbf!important; }
+.view-options { position:relative; }
+.view-options summary { list-style:none; min-height:44px; display:flex; align-items:center; gap:12px; padding:0 16px; border:1px solid #526b80; background:#101f2d; color:#e6f2fa; cursor:pointer; font:11px monospace; letter-spacing:1px; }
+.view-options summary::-webkit-details-marker { display:none; }
+.view-options summary:focus-visible { outline:2px solid #9bd5ed; outline-offset:2px; }
+.view-options-panel { position:absolute; right:0; top:calc(100% + 8px); width:210px; padding:8px; background:rgba(7,16,24,.97); border:1px solid #526b80; display:grid; gap:6px; box-shadow:0 8px 22px #0006; }
+.view-options-panel button { position:static!important; width:100%; min-height:44px; margin:0!important; transform:none!important; }
+.view-options-panel button[hidden] { display:none!important; }
 .systems-tour { position:absolute; inset:0; z-index:35; pointer-events:auto; }
 .systems-tour[hidden] { display:none; }
 .tour-lines { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
