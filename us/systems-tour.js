@@ -7,7 +7,7 @@ window.createSystemsTour=function({stage,camera,pose,bounds,example,finish}){
   {title:'RECON DRONE',body:'Vehicle-carried reconnaissance',note:'Operator confirmation before launch'}
  ];
  const root=document.createElement('section');root.className='systems-tour';root.hidden=true;root.setAttribute('aria-label','Onboard systems tour');
- root.innerHTML='<svg class="tour-lines" aria-hidden="true"><path/></svg><div class="tour-transition"></div><article class="tour-card"><div class="tour-eyebrow">ONBOARD ARCHITECTURE · PREVIEW</div><h2></h2><img alt=""><p class="tour-body"></p><div class="tour-flow"><span>Detect</span><span>Track</span><span>Record</span><span>Ask</span></div><p class="tour-note"></p><div class="tour-example" hidden><small>SCRIPTED WORKFLOW EXAMPLE</small><p></p></div><div class="tour-count"></div><div class="tour-progress"><i></i></div><div class="tour-controls"><button type="button" class="tour-pause">PAUSE</button><button type="button" class="tour-next">NEXT</button><button type="button" class="tour-skip">SKIP TOUR</button></div></article>';
+ root.innerHTML='<div class="tour-device-label" hidden></div><div class="tour-transition"></div><article class="tour-card"><div class="tour-eyebrow">ONBOARD ARCHITECTURE · PREVIEW</div><h2></h2><img alt=""><p class="tour-body"></p><div class="tour-flow"><span>Detect</span><span>Track</span><span>Record</span><span>Ask</span></div><p class="tour-note"></p><div class="tour-example" hidden><small>SCRIPTED WORKFLOW EXAMPLE</small><p></p></div><div class="tour-count"></div><div class="tour-progress"><i></i></div><div class="tour-controls"><button type="button" class="tour-pause">PAUSE</button><button type="button" class="tour-next">NEXT</button><button type="button" class="tour-skip">SKIP TOUR</button></div></article>';
  stage.append(root);const q=s=>root.querySelector(s),card=q('.tour-card');
  const voice=createTourNarration();
  let active=false,index=0,time=0,held=false,switched=false,commandApplied=false,voiceStarted=false;
@@ -50,25 +50,16 @@ window.createSystemsTour=function({stage,camera,pose,bounds,example,finish}){
    q('.tour-progress i').style.width=Math.min(100,time/duration*100)+'%';
    q('.tour-flow').hidden=index!==1;
    [...root.querySelectorAll('.tour-flow span')].forEach((el,i)=>el.classList.toggle('active',index===1 && i===Math.min(3,Math.floor(time/1.1))));
-   const anchor=pose(index,false,true).project(camera),r=stage.getBoundingClientRect(),c=card.getBoundingClientRect();
-   const svg=q('svg'),visible=switched && anchor.z>-1 && anchor.z<1 && Math.abs(anchor.x)<1 && Math.abs(anchor.y)<1;
-   svg.style.visibility=visible?'visible':'hidden';svg.setAttribute('viewBox',`0 0 ${r.width} ${r.height}`);
-   let x=(anchor.x*.5+.5)*r.width,y=(-anchor.y*.5+.5)*r.height;
-   const mobile=r.width<=650;
-   const device=index>=2?bounds(index):null;
-   let ex=mobile?c.left-r.left+c.width/2:c.right-r.left,ey=mobile?c.top-r.top:c.top-r.top+45;
-   if(device){
-    // Keep the entire leader outside the projected device, including its rotors.
-    x=mobile && index===3?device.right*r.width+6:device.left*r.width-6;
-    y=(device.top+device.bottom)*.5*r.height;
-    x=Math.max(8,Math.min(r.width-8,x));
-    if(mobile)ex=Math.min(c.right-r.left-16,Math.max(c.left-r.left+16,x));
+   const label=q('.tour-device-label'),device=index>=2?bounds(index):null;
+   label.hidden=!switched || !device || time<.5;
+   if(!label.hidden){
+    label.textContent=index===2?'360° PTZ':'RECON DRONE';
+    const r=stage.getBoundingClientRect(),w=label.offsetWidth,h=label.offsetHeight;
+    const beside=index===2 && device.left*r.width>w+22;
+    const x=Math.max(10,Math.min(r.width-w-10,beside?device.left*r.width-w-12:(device.left+device.right)*.5*r.width-w/2));
+    const y=Math.max(60,beside?(device.top+device.bottom)*.5*r.height-h/2:device.top*r.height-h-12);
+    label.style.left=x+'px';label.style.top=y+'px';
    }
-   // Stop the leader short of its device-side anchor; no endpoint marker.
-   const bendX=mobile?x:ex+18,bendY=mobile?ey-12:ey;
-   const length=Math.hypot(bendX-x,bendY-y),gap=Math.min(mobile?40:28,length*.45);
-   if(length){x+=(bendX-x)*gap/length;y+=(bendY-y)*gap/length;}
-   q('path').setAttribute('d',mobile?`M ${x} ${y} L ${bendX} ${ey-12} L ${ex} ${ey}`:`M ${x} ${y} L ${ex+18} ${ey} L ${ex} ${ey}`);
   }
  };
 };

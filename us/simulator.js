@@ -2709,10 +2709,11 @@
       const anchor=index<2?rearAnchor:index===2?vehiclePoint([0,2.14,-.18]):vehiclePoint([0,2.10,1.35]);
       if(anchorOnly)return anchor;
       const portrait=camera.aspect<1;
-      const position=index<2?operatorEye.getWorldPosition(new THREE.Vector3()):vehiclePoint(index===2?[-1.65,2.9,-2.0]:[-1.8,2.9,3.1]);
+      const position=index<2?operatorEye.getWorldPosition(new THREE.Vector3()):vehiclePoint(index===2?[-.95,2.55,-1.15]:[-1.1,2.65,2.5]);
       const look=index<2?touchscreenSurface.getWorldPosition(new THREE.Vector3()):anchor.clone();
-      if(portrait)look.y-=index<2?.28:.85;
-      camera.position.copy(position);camera.fov=portrait?85:60;camera.updateProjectionMatrix();camera.lookAt(look);
+      if(portrait)look.y-=index<2?.28:.38;
+      if(index>=2 && camera.aspect>1 && el.stage.clientWidth<1000){const right=new THREE.Vector3().subVectors(look,position).cross(camera.up).normalize();look.addScaledVector(right,-.45);}
+      camera.position.copy(position);camera.fov=index<2?(portrait?85:60):(portrait?65:50);camera.updateProjectionMatrix();camera.lookAt(look);
       operator.visible=index>=2;
       return anchor;
     },

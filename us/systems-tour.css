@@ -8,8 +8,6 @@
 .view-options-panel button[hidden] { display:none!important; }
 .systems-tour { position:absolute; inset:0; z-index:35; pointer-events:auto; }
 .systems-tour[hidden] { display:none; }
-.tour-lines { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
-.tour-lines path { stroke:#e5f6ff; stroke-width:1.5; fill:none; }
 .tour-card { position:absolute; left:24px; top:90px; width:min(360px,38vw); padding:18px; background:rgba(7,16,24,.76); border:1px solid #c5dce8; color:#eef6fa; box-shadow:0 10px 40px #0005; }
 .tour-card h2 { font-size:20px; margin:8px 0; }
 .tour-card p { font-size:14px; line-height:1.5; margin:10px 0; }
@@ -43,3 +41,6 @@
  .tour-card h2 { font-size:18px; }
  .tour-card p { font-size:12px; margin:6px 0; }
 }
+
+.tour-device-label { position:absolute; padding:6px 10px; background:rgba(7,16,24,.72); color:#e5f6ff; border:1px solid #8ca9b777; font:11px monospace; letter-spacing:1px; pointer-events:none; }
+.tour-device-label[hidden] { display:none; }
