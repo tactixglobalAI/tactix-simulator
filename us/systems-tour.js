@@ -1,5 +1,5 @@
 /* Optional US-only architecture preview. No model or speech-service claims. */
-window.createSystemsTour=function({stage,camera,pose,example,finish}){
+window.createSystemsTour=function({stage,camera,pose,bounds,example,finish}){
  const steps=[
   {title:'EDGE AI COMPUTER',image:'edge-enclosure.jpg',body:'Behind display',note:'Voice-controlled mission workflow'},
   {title:'EDGE AI · MISSION ORCHESTRATION',image:'jetson.png',body:'Onboard models · No cloud inference',note:'Two-way voice · Operator decisions',duration:12},
@@ -53,11 +53,19 @@ window.createSystemsTour=function({stage,camera,pose,example,finish}){
    const anchor=pose(index,false,true).project(camera),r=stage.getBoundingClientRect(),c=card.getBoundingClientRect();
    const svg=q('svg'),visible=switched && anchor.z>-1 && anchor.z<1 && Math.abs(anchor.x)<1 && Math.abs(anchor.y)<1;
    svg.style.visibility=visible?'visible':'hidden';svg.setAttribute('viewBox',`0 0 ${r.width} ${r.height}`);
-   const x=(anchor.x*.5+.5)*r.width,y=(-anchor.y*.5+.5)*r.height;
+   let x=(anchor.x*.5+.5)*r.width,y=(-anchor.y*.5+.5)*r.height;
    const mobile=r.width<=650;
-   const ex=mobile?c.left-r.left+c.width/2:c.right-r.left,ey=mobile?c.top-r.top:c.top-r.top+45;
-   q('path').setAttribute('d',mobile?`M ${x} ${y} L ${ex} ${ey-12} L ${ex} ${ey}`:`M ${x} ${y} L ${ex+18} ${ey} L ${ex} ${ey}`);
-   root.querySelectorAll('circle').forEach(el=>{el.setAttribute('cx',x);el.setAttribute('cy',y);});
+   const device=index>=2?bounds(index):null;
+   let ex=mobile?c.left-r.left+c.width/2:c.right-r.left,ey=mobile?c.top-r.top:c.top-r.top+45;
+   if(device){
+    // Keep the entire leader outside the projected device, including its rotors.
+    x=mobile && index===3?device.right*r.width+6:device.left*r.width-6;
+    y=(device.top+device.bottom)*.5*r.height;
+    x=Math.max(8,Math.min(r.width-8,x));
+    if(mobile)ex=Math.min(c.right-r.left-16,Math.max(c.left-r.left+16,x));
+   }
+   q('path').setAttribute('d',mobile?`M ${x} ${y} L ${x} ${ey-12} L ${ex} ${ey}`:`M ${x} ${y} L ${ex+18} ${ey} L ${ex} ${ey}`);
+   root.querySelectorAll('circle').forEach((el,i)=>{el.setAttribute('cx',x);el.setAttribute('cy',y);el.setAttribute('r',mobile?(i?1:3):(i?1.5:5));});
   }
  };
 };

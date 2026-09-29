@@ -2694,6 +2694,12 @@
   }
 
   systemsTour=createSystemsTour({stage:el.stage,camera,
+    bounds(index){
+      const object=index===2?ptzRig:reconRig;if(!object)return null;
+      const box=new THREE.Box3().setFromObject(object),points=[];
+      for(const x of [box.min.x,box.max.x])for(const y of [box.min.y,box.max.y])for(const z of [box.min.z,box.max.z])points.push(new THREE.Vector3(x,y,z).project(camera));
+      return {left:Math.min(...points.map(p=>p.x*.5+.5)),right:Math.max(...points.map(p=>p.x*.5+.5)),top:Math.min(...points.map(p=>-p.y*.5+.5)),bottom:Math.max(...points.map(p=>-p.y*.5+.5))};
+    },
     pose(index,cut,anchorOnly=false){
       // Mark the rear upper edge in world metres; the imported display's
       // vertex coordinates are baked, so local unit offsets are not its height.
