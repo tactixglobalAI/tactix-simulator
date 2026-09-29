@@ -7,7 +7,7 @@ window.createSystemsTour=function({stage,camera,pose,bounds,example,finish}){
   {title:'RECON DRONE',body:'Vehicle-carried reconnaissance',note:'Operator confirmation before launch'}
  ];
  const root=document.createElement('section');root.className='systems-tour';root.hidden=true;root.setAttribute('aria-label','Onboard systems tour');
- root.innerHTML='<svg class="tour-lines" aria-hidden="true"><path/><circle r="5"/><circle r="1.5"/></svg><div class="tour-transition"></div><article class="tour-card"><div class="tour-eyebrow">ONBOARD ARCHITECTURE · PREVIEW</div><h2></h2><img alt=""><p class="tour-body"></p><div class="tour-flow"><span>Detect</span><span>Track</span><span>Record</span><span>Ask</span></div><p class="tour-note"></p><div class="tour-example" hidden><small>SCRIPTED WORKFLOW EXAMPLE</small><p></p></div><div class="tour-count"></div><div class="tour-progress"><i></i></div><div class="tour-controls"><button type="button" class="tour-pause">PAUSE</button><button type="button" class="tour-next">NEXT</button><button type="button" class="tour-skip">SKIP TOUR</button></div></article>';
+ root.innerHTML='<svg class="tour-lines" aria-hidden="true"><path/></svg><div class="tour-transition"></div><article class="tour-card"><div class="tour-eyebrow">ONBOARD ARCHITECTURE · PREVIEW</div><h2></h2><img alt=""><p class="tour-body"></p><div class="tour-flow"><span>Detect</span><span>Track</span><span>Record</span><span>Ask</span></div><p class="tour-note"></p><div class="tour-example" hidden><small>SCRIPTED WORKFLOW EXAMPLE</small><p></p></div><div class="tour-count"></div><div class="tour-progress"><i></i></div><div class="tour-controls"><button type="button" class="tour-pause">PAUSE</button><button type="button" class="tour-next">NEXT</button><button type="button" class="tour-skip">SKIP TOUR</button></div></article>';
  stage.append(root);const q=s=>root.querySelector(s),card=q('.tour-card');
  const voice=createTourNarration();
  let active=false,index=0,time=0,held=false,switched=false,commandApplied=false,voiceStarted=false;
@@ -64,8 +64,11 @@ window.createSystemsTour=function({stage,camera,pose,bounds,example,finish}){
     x=Math.max(8,Math.min(r.width-8,x));
     if(mobile)ex=Math.min(c.right-r.left-16,Math.max(c.left-r.left+16,x));
    }
-   q('path').setAttribute('d',mobile?`M ${x} ${y} L ${x} ${ey-12} L ${ex} ${ey}`:`M ${x} ${y} L ${ex+18} ${ey} L ${ex} ${ey}`);
-   root.querySelectorAll('circle').forEach((el,i)=>{el.setAttribute('cx',x);el.setAttribute('cy',y);el.setAttribute('r',mobile?(i?1:3):(i?1.5:5));});
+   // Stop the leader short of its device-side anchor; no endpoint marker.
+   const bendX=mobile?x:ex+18,bendY=mobile?ey-12:ey;
+   const length=Math.hypot(bendX-x,bendY-y),gap=Math.min(mobile?40:28,length*.45);
+   if(length){x+=(bendX-x)*gap/length;y+=(bendY-y)*gap/length;}
+   q('path').setAttribute('d',mobile?`M ${x} ${y} L ${bendX} ${ey-12} L ${ex} ${ey}`:`M ${x} ${y} L ${ex+18} ${ey} L ${ex} ${ey}`);
   }
  };
 };
