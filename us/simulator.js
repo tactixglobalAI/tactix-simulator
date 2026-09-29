@@ -133,11 +133,12 @@
   let entryDoor = null;
   let ptzMount = null;
   let selectedScenario="patrol", launchData=null, launchFlight=null, launchRotors=[], launchTime=0, launchCount=0, aerialContact=null;
+  const airContactRotors=[];
   const air = {phase:"IDLE",time:0,acquired:0,pan:0,tilt:0,fov:32,cueZ:0,launchBearing:0,approach:null,confirmed:false,history:[]};
   const aircraftLabels=['INTERCEPTOR 01','AIR CONTACT 01'].map(text=>{
     const label=document.createElement('span');label.className='aircraft-label';label.textContent=text;label.hidden=true;label.setAttribute('aria-hidden','true');el.stage.appendChild(label);return label;
   });
-  let roofHardware=null, ptzPan=null, ptzTilt=null, ptzOptical=null, ptzRig=null, interceptorRig=null;
+  let roofHardware=null, ptzPan=null, ptzTilt=null, ptzOptical=null, ptzRig=null, interceptorRig=null, reconRig=null;
   const interactionTargets = {};
   const rigBones = {};
   const characterController = {
@@ -195,7 +196,7 @@
   const narrationHistory=[];
   let narrationError = null;
   const narrationBuffers = new Map();
-  const narrationManifest = Promise.all(['assets/audio/narration/manifest.json?v=air-2','us/audio/narration/manifest.json?v=direction-1'].map(url=>fetch(url).then(response=>{if(!response.ok)throw new Error('Narration manifest unavailable');return response.json();})))
+  const narrationManifest = Promise.all(['assets/audio/narration/manifest.json?v=air-2','us/audio/narration/manifest.json?v=american-1'].map(url=>fetch(url).then(response=>{if(!response.ok)throw new Error('Narration manifest unavailable');return response.json();})))
     .then(([shared,regional])=>({...shared,clips:{...shared.clips,...regional.clips}}))
     .catch(error => { narrationError = error.message; return { clips: {} }; });
   let officerLoaded = false;
@@ -365,6 +366,11 @@
   const sensorScreen = new THREE.Scene();
   const sensorScreenCamera = new THREE.OrthographicCamera(-1,1,1,-1,0,1);
   sensorScreen.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2),new THREE.MeshBasicMaterial({map:sensorTarget.texture,depthTest:false,depthWrite:false})));
+  const trackCanvas=document.createElement('canvas');trackCanvas.width=512;trackCanvas.height=288;
+  const trackContext=trackCanvas.getContext('2d'),trackTexture=new THREE.CanvasTexture(trackCanvas);
+  const trackOverlay=new THREE.Scene();
+  trackOverlay.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2),new THREE.MeshBasicMaterial({map:trackTexture,transparent:true,depthTest:false,depthWrite:false})));
+  let sensorTrack={status:'NONE',box:null,label:'',lastSeen:0};
   const vegetation = new THREE.Group();
   vegetation.name = 'PERSON_ONE_VEGETATION';
   vegetation.position.z=ENCOUNTER_Z;
@@ -978,11 +984,13 @@
 
   function installRoofHardware(done) {
     const load=url=>new Promise((resolve,reject)=>new THREE.GLTFLoader().load(url,resolve,undefined,reject));
-    Promise.all([load(ASSETS.roofPlatform),load(ASSETS.ptz),load(ASSETS.interceptor)]).then(([platform,ptz,interceptor])=>{
+    Promise.all([load(ASSETS.roofPlatform),load(ASSETS.ptz),load(ASSETS.interceptor),load('assets/models/us_recon_docked.glb?v=1')]).then(([platform,ptz,interceptor,recon])=>{
       roofHardware=new THREE.Group();roofHardware.name='InstalledRoofHardware';cockpit.add(roofHardware);
       // US-specific rack is part of the SUV asset.
       ptzRig=ptz.scene;ptzRig.name='InstalledPTZ';ptzRig.position.set(0,1.822,-.18);roofHardware.add(ptzRig);
       interceptorRig=interceptor.scene;interceptorRig.name='InstalledInterceptor';interceptorRig.position.set(0,1.836,1.40);roofHardware.add(interceptorRig);
+      reconRig=recon.scene;reconRig.name='InstalledRecon';reconRig.position.set(0,1.847,1.35);roofHardware.add(reconRig);
+      updateRoofPayload();
       ptzPan=ptzRig.getObjectByName('PtzPan');ptzTilt=ptzRig.getObjectByName('PtzTilt');ptzOptical=ptzRig.getObjectByName('PtzOpticalOrigin');
       if(!ptzPan || !ptzTilt || !ptzOptical)throw new Error('PTZ articulation nodes missing');
       // Optical glass is absent from the STL. A modest lens face makes heading readable.
@@ -991,6 +999,12 @@
       roofHardware.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});
       roofHardware.updateMatrixWorld(true);updateSensorCamera();done();
     }).catch(error=>{console.error('Roof hardware load failed',error);el.enter.textContent='ROOF HARDWARE LOAD FAILED — RELOAD';});
+  }
+
+  function updateRoofPayload() {
+    if(interceptorRig)interceptorRig.visible=selectedScenario==='interception';
+    if(reconRig)reconRig.visible=selectedScenario==='patrol';
+    cockpit?.traverse(o=>{if(o.name.includes('InterceptorAdapter'))o.visible=selectedScenario==='interception';});
   }
 
   function installTouchscreen(done) {
@@ -1554,7 +1568,7 @@
     sensorVisible = true;
     sensorThermal = true;
     el.sensor.hidden = true;
-    el.sensorTarget.textContent = 'PERSON 1 · UNCONFIRMED';
+    el.sensorTarget.textContent = 'PERSON 01 · UNCONFIRMED';
     el.sensorMode.textContent = 'THERMAL';
     document.querySelector('.track-panel').hidden = false;
     el.trackState.textContent = 'AUTO TRACK · UNCONFIRMED';
@@ -1574,7 +1588,7 @@
     sensorVisible = true;
     sensorThermal = !sensorThermal;
     el.sensor.hidden = true;
-    el.sensorTarget.textContent = "PERSON 1 · UNCONFIRMED";
+    el.sensorTarget.textContent = "PERSON 01 · UNCONFIRMED";
     el.sensorMode.textContent = sensorThermal ? 'THERMAL' : 'VISIBLE';
     el.thermal.textContent = sensorThermal ? 'VIEW PTZ VISIBLE' : 'VIEW PTZ THERMAL';
     setState(state === STATES.TRACKING ? STATES.TRACKING : STATES.INSPECTING);
@@ -1589,7 +1603,7 @@
     el.sensor.hidden = true;
     setState(STATES.TRACKING);
     el.sentry.textContent = "TRACKING";
-    el.sensorTarget.textContent = "PERSON 1 · 0.74";
+    el.sensorTarget.textContent = "PERSON 01 · TRACK ACTIVE";
     el.sensorMode.textContent = "AUTO TRACK";
     el.trackConfidence.textContent = "0.74";
     el.trackState.textContent = "TRACKING";
@@ -1636,10 +1650,17 @@
         }
       }
       if(!aerialContact){
-        const gltf=await new Promise((resolve,reject)=>new THREE.GLTFLoader().load('assets/models/air_contact_quadcopter.glb',resolve,undefined,reject));
+        const gltf=await new Promise((resolve,reject)=>new THREE.GLTFLoader().load('assets/models/us_air_contact_quadcopter.glb',resolve,undefined,reject));
         aerialContact=gltf.scene;aerialContact.name='AirContact01';scene.add(aerialContact);
+        aerialContact.traverse(o=>{if(/^AirContactRotor[1-4]$/.test(o.name))airContactRotors.push({pivot:o,rest:o.quaternion.clone()});});
+        if(airContactRotors.length!==4)throw new Error('Air contact requires four propeller pivots');
+        for(const {pivot} of airContactRotors){
+          // A faint swept disk avoids frozen-looking blades from frame-rate aliasing.
+          const disk=new THREE.Mesh(new THREE.CircleGeometry(.073,32),new THREE.MeshBasicMaterial({color:0xa0a5a8,transparent:true,opacity:.14,side:THREE.DoubleSide,depthWrite:false}));
+          disk.rotation.x=-Math.PI/2;disk.name='AirContactRotorBlur';pivot.add(disk);
+        }
       }
-      selectedScenario='interception';launchTime=0;launchCount=0;el.startPanel.hidden=true;contact.visible=false;
+      selectedScenario='interception';updateRoofPayload();launchTime=0;launchCount=0;el.startPanel.hidden=true;contact.visible=false;
       vehicleSpeed=driverSpeedTarget=0;observationPhase='NONE';manualPtz=false;sensorVisible=true;sensorThermal=false;
       enterOperatorMode();setState(STATES.LAUNCH_READY);yaw=-.35;pitch=-.13;
       Object.assign(air,{phase:'PATROL',time:0,acquired:0,pan:0,tilt:0,fov:32,cueZ:vehicle.position.z-22,confirmed:false,history:[]});
@@ -1688,6 +1709,7 @@
   function updateAirContact(dt) {
     if(!aerialContact || state===STATES.COMPLETE || state===STATES.READY)return;
     air.time+=dt;
+    airContactRotors.forEach(({pivot,rest},i)=>pivot.quaternion.copy(rest).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),air.time*(i===0 || i===3?1:-1)*360)));
     // A pre-existing aircraft flies a slow lateral survey arc; no target spawning or pursuit guidance.
     aerialContact.position.x=96-28*Math.sin(air.time*.025);
     aerialContact.position.y=20+.12*Math.sin(air.time*.9);
@@ -1928,6 +1950,10 @@
   });
 
   window.__tactixEntryDebug = {
+    sensorTrackingSnapshot(){
+      const bounds=reconRig?new THREE.Box3().setFromObject(reconRig):null;
+      return {track:sensorTrack,rotors:airContactRotors.map(({pivot})=>({name:pivot.name,quaternion:pivot.quaternion.toArray(),position:pivot.getWorldPosition(new THREE.Vector3()).toArray()})),reconVisible:reconRig?.visible,interceptorVisible:interceptorRig?.visible,recon:bounds?{min:bounds.min.toArray(),max:bounds.max.toArray(),ptzOverlap:bounds.intersectsBox(new THREE.Box3().setFromObject(ptzRig)),deckBottom:bounds.min.y-vehicle.position.y}:null,cameraFov:camera.fov,voice:narrationBuffers.size};
+    },
     airCommand,
     bearingProbe(point){return debugEntry?contactBearing(new THREE.Vector3(...point)):null;},
     startPatrolReview() {
@@ -2220,9 +2246,17 @@
     }
   }
 
+  let observationFraming=0, operatorCameraStamp=0;
   function updateOperatorCamera(now) {
     if (!operatorEye) return;
-    const seatedFov=!exteriorView && camera.aspect<1 ? Math.min(100,THREE.MathUtils.radToDeg(2*Math.atan(Math.tan(THREE.MathUtils.degToRad(35))/camera.aspect))) : 70;
+    const stamp=performance.now(), cameraDt=operatorCameraStamp?Math.min((stamp-operatorCameraStamp)/1000,.1):0;
+    operatorCameraStamp=stamp;
+    const observing=selectedScenario==='patrol' && observationPhase==='OBSERVING' && vehicleSpeed<.01 && !clipMonitorAttention && !expandedDialog.open && patrolElapsed>=manualLookUntil && !pointerDown;
+    observationFraming+=(Number(observing)-observationFraming)*(1-Math.exp(-cameraDt*2));
+    // A restrained attention crop, from the actual seated eye. No camera teleport,
+    // push through the glass, or magnification of the sensor target itself.
+    const baseFov=70-12*observationFraming;
+    const seatedFov=!exteriorView && camera.aspect<1 ? Math.min(100,THREE.MathUtils.radToDeg(2*Math.atan(Math.tan(THREE.MathUtils.degToRad(baseFov/2))/camera.aspect))) : exteriorView?70:baseFov;
     if(camera.fov!==seatedFov){camera.fov=seatedFov;camera.updateProjectionMatrix();}
     operator.visible=exteriorView && !!seatedRootLocal;
     if(seatedRootLocal) {operator.position.copy(vehiclePoint(seatedRootLocal.toArray()));operator.updateMatrixWorld(true);updateSeatedHead();}
@@ -2283,7 +2317,7 @@
       targetYaw=Math.atan2(-offset.x,-offset.z);
       targetPitch=Math.atan2(offset.y,Math.hypot(offset.x,offset.z));
     } else if(observationPhase==='OBSERVING' || ((observationPhase==='STOPPING' || officerSlowPending) && approachTracking)) {
-      const offset=ptzTarget().sub(operatorEye.getWorldPosition(new THREE.Vector3()));
+      const offset=driverObservationTarget().sub(operatorEye.getWorldPosition(new THREE.Vector3()));
       targetYaw=Math.atan2(-offset.x,-offset.z);
       targetPitch=Math.atan2(offset.y,Math.hypot(offset.x,offset.z));
     } else if(['STOPPING','RESUMING'].includes(observationPhase) || screenAttention){targetYaw=-.22;if(Math.abs(yaw+.22)<.01)screenAttention=false;}
@@ -2349,9 +2383,15 @@
     return driverSightClear;
   }
 
+  function driverObservationTarget() {
+    // Frame the hiding place as well as the exposed head. Keep using the live
+    // skeleton so changes in pose or stopping position cannot detach the gaze.
+    return ptzTarget().add(new THREE.Vector3(0,-.18,0));
+  }
+
   function settledPersonSightline() {
     if(!operatorEye || vehicleSpeed>.01)return false;
-    const delta=ptzTarget().sub(operatorEye.getWorldPosition(new THREE.Vector3()));
+    const delta=driverObservationTarget().sub(operatorEye.getWorldPosition(new THREE.Vector3()));
     const aimYaw=THREE.MathUtils.clamp(Math.atan2(-delta.x,-delta.z),-1.05,1.05);
     const aimPitch=THREE.MathUtils.clamp(Math.atan2(delta.y,Math.hypot(delta.x,delta.z)),-.5,.35);
     return Math.abs(yaw-aimYaw)<=.06 && Math.abs(pitch-aimPitch)<=.07 ;
@@ -2593,6 +2633,57 @@
   });
   resize();
 
+  function renderTrackingOverlay() {
+    const ctx=trackContext;ctx.clearRect(0,0,512,288);
+    const airMode=selectedScenario==='interception';
+    const active=airMode?['ACQUIRING','TRACKING','CONFIRM','BRAKING','LAUNCHING'].includes(air.phase):contact.visible && [STATES.TRACKING,STATES.CONTACT,STATES.INSPECTING,STATES.PATROL_FINALE].includes(state);
+    const now=performance.now();let points=[],label='',detail='';
+    if(active && airMode && aerialContact) {
+      aerialContact.traverse(mesh=>{
+        if(!mesh.isMesh)return;
+        if(!mesh.geometry.boundingBox)mesh.geometry.computeBoundingBox();
+        const bounds=mesh.geometry.boundingBox;
+        for(const x of [bounds.min.x,bounds.max.x])for(const y of [bounds.min.y,bounds.max.y])for(const z of [bounds.min.z,bounds.max.z])points.push(new THREE.Vector3(x,y,z).applyMatrix4(mesh.matrixWorld));
+      });
+      label='AIR CONTACT 01';detail=air.confirmed?'QUADCOPTER · TRACK ACTIVE':'ACQUIRING';
+    } else if(active) {
+      // Only visible skeletal samples contribute: never bracket a hidden full body.
+      const visible=exposedPersonSamples(sensorCamera.position);
+      const right=new THREE.Vector3(1,0,0).applyQuaternion(sensorCamera.quaternion);
+      const up=new THREE.Vector3(0,1,0).applyQuaternion(sensorCamera.quaternion);
+      // Head joints sit near the base of the skull, below the visible hood.
+      // Include its physical volume instead of centering a tiny box on the joint.
+      for(const p of visible)for(const dx of [-.14,.14])for(const dy of [-.06,.23])points.push(p.clone().addScaledVector(right,dx).addScaledVector(up,dy));
+      label='PERSON 01';detail=npcState===NPC_STATES.HIDDEN_CROUCH?'CROUCHING / PARTLY CONCEALED':'PERSON · TRACK ACTIVE';
+    }
+    sensorCamera.updateMatrixWorld(true);
+    const projected=points.map(p=>p.project(sensorCamera)).filter(p=>p.z>=-1 && p.z<=1);
+    let box=null;
+    if(projected.length){
+      const left=Math.min(...projected.map(p=>(p.x+1)*256))-4,right=Math.max(...projected.map(p=>(p.x+1)*256))+4;
+      const top=Math.min(...projected.map(p=>(1-p.y)*144))-4,bottom=Math.max(...projected.map(p=>(1-p.y)*144))+4;
+      if(right>0 && left<512 && bottom>0 && top<288)box=[Math.max(3,left),Math.max(3,top),Math.min(509,right),Math.min(285,bottom)];
+    }
+    if(box){
+      sensorTrack={status:'TRACKING',box,label,lastSeen:now};
+      ctx.strokeStyle='#ffcf62';ctx.lineWidth=2;
+      const [l,t,r,b]=box,k=Math.min(12,(r-l)/3,(b-t)/3);
+      ctx.beginPath();
+      for(const [x,y,sx,sy] of [[l,t,1,1],[r,t,-1,1],[l,b,1,-1],[r,b,-1,-1]]){ctx.moveTo(x+sx*k,y);ctx.lineTo(x,y);ctx.lineTo(x,y+sy*k);}
+      ctx.stroke();
+    } else if(active && sensorTrack.label===label && now-sensorTrack.lastSeen<1800){
+      sensorTrack.status='OCCLUDED';sensorTrack.box=null;detail='TRACK OCCLUDED';
+    } else {sensorTrack={status:'NONE',box:null,label:'',lastSeen:0};label='';}
+    if(label && sensorTrack.status!=='NONE'){
+      // Fixed header prevents the label from covering a small exposed head.
+      ctx.fillStyle='rgba(5,12,18,.82)';ctx.fillRect(6,6,Math.min(500,Math.max(label.length,detail.length)*7.8+16),40);
+      ctx.fillStyle='#ffcf62';ctx.font='bold 14px sans-serif';ctx.fillText(label,12,23);
+      ctx.fillStyle='#e3edf1';ctx.font='12px sans-serif';ctx.fillText(detail,12,39);
+    }
+    trackTexture.needsUpdate=true;
+    const clear=renderer.autoClear;renderer.autoClear=false;renderer.render(trackOverlay,sensorScreenCamera);renderer.autoClear=clear;
+  }
+
   function renderSensorView(inset = false) {
     if (!sensorVisible) return;
     if(inset) {
@@ -2623,6 +2714,7 @@
     if(!inset) {
       renderer.setRenderTarget(sensorTarget);
       renderer.render(scene,sensorCamera);
+      renderTrackingOverlay();
       captureEventFrame();
       renderer.setRenderTarget(null);
     }

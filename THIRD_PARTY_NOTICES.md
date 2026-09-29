@@ -30,3 +30,13 @@ Modified for this simulator: joined static meshes, decimated geometry, resized t
 Police Interceptor SUV by 3dmi, purchased source supplied by the owner from CGTrader: https://www.cgtrader.com/3d-models/car/suv/police-interceptor-suv . Owner confirmed license clearance. This records that confirmation and grants no independent model redistribution rights to visitors. Source masters stay in the private authoring repository. US runtime adaptations: metre scale/orientation, wheel separation, materials, enlarged existing computer screen, measured roof platform, driver sockets and live instrument texture. Runtime asset: assets/models/us_police_suv.glb.
 
 US hooded NPC reuses the credited hooded source with project-authored Walk, StandToCrouch and kneeling idle poses; original rig/skinning retained. Runtime asset: assets/models/us_hooded_npc.glb.
+
+## US recon and camera visualization
+
+Recon component STLs supplied by the project owner; original filename recondroneSTL. Source archive and checksum provenance stay in assets/source/recon in the authoring repository. Modified by simplification, mm-to-metre conversion, authored materials and cradle. Runtime: assets/models/us_recon_docked.glb. No license document was included in the supplied archive.
+
+OAK-D S2 PoE camera appearance is project-authored from owner-provided product references, with approximate housing dimensions from the Luxonis datasheet: https://www.mouser.com/pdfDocs/OAK-D-S2-PoE_Datasheet.pdf . It is a visual approximation, not manufacturer CAD, a tested physical mount, or an endorsement.
+
+US quadcopter derivative retains the above CC BY 4.0 attribution. Separate original blade meshes, motor-axis pivots and runtime swept disks were added in assets/models/us_air_contact_quadcopter.glb.
+
+US narration uses the same credited Kokoro model with af_heart American female voice weights; all US MP3s are local generated assets. No Google voice or service is used.

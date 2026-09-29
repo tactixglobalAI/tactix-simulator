@@ -2,113 +2,275 @@
   "engine": "Kokoro 0.9.4",
   "model": "hexgrad/Kokoro-82M",
   "revision": "f3ff3571791e39611d31c381e3a41a3af07b4987",
-  "voice": "bf_emma",
+  "voice": "af_heart",
   "speed": 1.0,
   "sample_rate": 24000,
   "clips": {
+    "Operator seated.": {
+      "file": "us/audio/narration/seated.mp3?v=edabc749ddb4",
+      "spoken_text": "Operator seated.",
+      "seconds": 1.825,
+      "sha256": "edabc749ddb4922cab76071c320daf986fc2de220cb466e2025d555a91306972"
+    },
+    "Night patrol active. Sentry One PTZ is scanning in visible and thermal bands.": {
+      "file": "us/audio/narration/patrol.mp3?v=297db44ab452",
+      "spoken_text": "Patrol active. Scanning.",
+      "seconds": 2.375,
+      "sha256": "297db44ab4522d3a2e64d77219fc39e0a0c057fc485a1189e601724878579b87"
+    },
+    "Sentry One PTZ. Clip transmitted successfully to command center.": {
+      "file": "us/audio/narration/clip_sent.mp3?v=9e907788feb1",
+      "spoken_text": "Sentry One P T Z. Clip transmitted successfully to command center.",
+      "seconds": 5.025,
+      "sha256": "9e907788feb142196aed4ae95cbad41f5e2d03c7840337bed2d5e0f1a2dffc5e"
+    },
+    "Activity clip recorded. Send the clip to the command center?": {
+      "file": "us/audio/narration/clip_ready.mp3?v=7778de37f9ce",
+      "spoken_text": "The activity clip has been recorded. Would you like to send it to the command center?",
+      "seconds": 5.25,
+      "sha256": "7778de37f9cead03b75f74f5e86806ee6fac4a92a81c91296223d3d950552e85"
+    },
+    "Sentry One PTZ thermal is now displayed on the center console. Classification remains provisional.": {
+      "file": "us/audio/narration/thermal.mp3?v=1a4ad0419cdd",
+      "spoken_text": "The Sentry One P T Z thermal feed is on the center console. The classification is still provisional.",
+      "seconds": 7.05,
+      "sha256": "1a4ad0419cdd0d9edc351e96e8dca6d8ac2e89212a82ff9364bca9ed56c750de"
+    },
+    "Tracking is active on the center console. No hostile action has been inferred.": {
+      "file": "us/audio/narration/tracking.mp3?v=8074a9bc296d",
+      "spoken_text": "Tracking is active. We haven’t identified any hostile action.",
+      "seconds": 4.2,
+      "sha256": "8074a9bc296dafc21e787b252ccf164ca3fc96dc3917e5a4bb70649ba056489a"
+    },
+    "Contact dismissed by the operator. Sentry One PTZ has resumed its scan.": {
+      "file": "us/audio/narration/dismissed.mp3?v=727e34704bc4",
+      "spoken_text": "Contact dismissed. Sentry One P T Z is scanning again.",
+      "seconds": 4.375,
+      "sha256": "727e34704bc46d08f3aba9e5fa9ac3eaa5e9112e895f0895c3af1f56ae1f18f9"
+    },
+    "Sentry One PTZ. Person detected at your twelve o'clock. Tracking and recording. Slow down.": {
+      "file": "us/audio/narration/contact_12.mp3?v=61bfffb94920",
+      "spoken_text": "Sentry One P T Z. Person detected at your twelve o'clock. Tracking and recording. Slow down.",
+      "seconds": 9.225,
+      "sha256": "61bfffb949207e023c7b6910e74d2f4163227cc226f566bb346875312d75f1bc",
+      "slowdown_seconds": 8.225
+    },
+    "Sentry One PTZ. Person detected at your one o'clock. Tracking and recording. Slow down.": {
+      "file": "us/audio/narration/contact_1.mp3?v=34c8400e03e7",
+      "spoken_text": "Sentry One P T Z. Person detected at your one o'clock. Tracking and recording. Slow down.",
+      "seconds": 9.075,
+      "sha256": "34c8400e03e75f922671ed7f93194d76561ee390eaac4b86007b1abce4d96a30",
+      "slowdown_seconds": 8.075
+    },
+    "Sentry One PTZ. Person detected at your two o'clock. Tracking and recording. Slow down.": {
+      "file": "us/audio/narration/contact_2.mp3?v=8b8da85d9165",
+      "spoken_text": "Sentry One P T Z. Person detected at your two o'clock. Tracking and recording. Slow down.",
+      "seconds": 9.1,
+      "sha256": "8b8da85d91655e4f0aa6a196a1d0820bf4c61046db4bb7f8e8c2240966d8f843",
+      "slowdown_seconds": 8.1
+    },
+    "Sentry One PTZ. Person detected at your three o'clock. Tracking and recording. Slow down.": {
+      "file": "us/audio/narration/contact_3.mp3?v=216e84f8c729",
+      "spoken_text": "Sentry One P T Z. Person detected at your three o'clock. Tracking and recording. Slow down.",
+      "seconds": 9.125,
+      "sha256": "216e84f8c7298f879430303b3bda76a67f3cc113fcd866c1baedf32e72f4e398",
+      "slowdown_seconds": 8.125
+    },
+    "Sentry One PTZ. Person detected at your four o'clock. Tracking and recording. Slow down.": {
+      "file": "us/audio/narration/contact_4.mp3?v=4a1cd4763846",
+      "spoken_text": "Sentry One P T Z. Person detected at your four o'clock. Tracking and recording. Slow down.",
+      "seconds": 9.125,
+      "sha256": "4a1cd47638462180739494d2b0ca2a3443248c2314b72eca61175040827991bc",
+      "slowdown_seconds": 8.125
+    },
+    "Sentry One PTZ. Person detected at your five o'clock. Tracking and recording. Slow down.": {
+      "file": "us/audio/narration/contact_5.mp3?v=b0c45362eb51",
+      "spoken_text": "Sentry One P T Z. Person detected at your five o'clock. Tracking and recording. Slow down.",
+      "seconds": 9.15,
+      "sha256": "b0c45362eb51ea7b73a7fe55d35b23e38086ea4edbdf8a84db4ce9f4f08ab947",
+      "slowdown_seconds": 8.15
+    },
+    "Sentry One PTZ. Person detected at your six o'clock. Tracking and recording. Slow down.": {
+      "file": "us/audio/narration/contact_6.mp3?v=4ddca1f49091",
+      "spoken_text": "Sentry One P T Z. Person detected at your six o'clock. Tracking and recording. Slow down.",
+      "seconds": 9.125,
+      "sha256": "4ddca1f49091d5f9c6fcc98ae27c8e501c3067ed7b433f057675d951773377ef",
+      "slowdown_seconds": 8.125
+    },
+    "Sentry One PTZ. Person detected at your seven o'clock. Tracking and recording. Slow down.": {
+      "file": "us/audio/narration/contact_7.mp3?v=053382a525e9",
+      "spoken_text": "Sentry One P T Z. Person detected at your seven o'clock. Tracking and recording. Slow down.",
+      "seconds": 9.275,
+      "sha256": "053382a525e91f089572cf5c33c4fa79457e993ac4f158afa69bfc1f2a822ec5",
+      "slowdown_seconds": 8.275
+    },
+    "Sentry One PTZ. Person detected at your eight o'clock. Tracking and recording. Slow down.": {
+      "file": "us/audio/narration/contact_8.mp3?v=fa4904d21d25",
+      "spoken_text": "Sentry One P T Z. Person detected at your eight o'clock. Tracking and recording. Slow down.",
+      "seconds": 9.1,
+      "sha256": "fa4904d21d253428ac587dfc7c41affe36023ce2bfbfc7cd4d26f4f66478a803",
+      "slowdown_seconds": 8.1
+    },
+    "Sentry One PTZ. Person detected at your nine o'clock. Tracking and recording. Slow down.": {
+      "file": "us/audio/narration/contact_9.mp3?v=89f2ad1295d7",
+      "spoken_text": "Sentry One P T Z. Person detected at your nine o'clock. Tracking and recording. Slow down.",
+      "seconds": 9.075,
+      "sha256": "89f2ad1295d72e4fc8c8653a66ab84f774e1ea27c5175a152764d6689f4f0285",
+      "slowdown_seconds": 8.075
+    },
+    "Sentry One PTZ. Person detected at your ten o'clock. Tracking and recording. Slow down.": {
+      "file": "us/audio/narration/contact_10.mp3?v=76bb9cab8eee",
+      "spoken_text": "Sentry One P T Z. Person detected at your ten o'clock. Tracking and recording. Slow down.",
+      "seconds": 9.1,
+      "sha256": "76bb9cab8eee8700858adb562a526cd4051cedf52968c4158c9c9b27b1c3fabb",
+      "slowdown_seconds": 8.1
+    },
+    "Sentry One PTZ. Person detected at your eleven o'clock. Tracking and recording. Slow down.": {
+      "file": "us/audio/narration/contact_11.mp3?v=2dd693375059",
+      "spoken_text": "Sentry One P T Z. Person detected at your eleven o'clock. Tracking and recording. Slow down.",
+      "seconds": 9.325,
+      "sha256": "2dd6933750597730a6955682aec32d9f27122091dc230f4557234484ee778d10",
+      "slowdown_seconds": 8.325
+    },
+    "Air patrol active. Sentry One PTZ scanning.": {
+      "file": "us/audio/narration/air_patrol.mp3?v=7e3c57ccdbb8",
+      "spoken_text": "Air patrol active. Sentry One P T Z scanning.",
+      "seconds": 3.9,
+      "sha256": "7e3c57ccdbb82f28e11ad67a43e196090fb5f205e100a519fe88a3411976f879"
+    },
+    "Air contact detected, two o’clock. Sentry One PTZ slewing.": {
+      "file": "us/audio/narration/air_cue.mp3?v=f1003e0de454",
+      "spoken_text": "Air contact detected, two o’clock. Sentry One P T Z slewing.",
+      "seconds": 4.95,
+      "sha256": "f1003e0de45402c0200d1b78e76d21395cbe7b0861910b1f100237a801ca6424"
+    },
+    "Quadcopter confirmed. Tracking Air Contact One.": {
+      "file": "us/audio/narration/air_confirmed.mp3?v=eae53976a19b",
+      "spoken_text": "Quadcopter confirmed. Tracking Air Contact One.",
+      "seconds": 3.825,
+      "sha256": "eae53976a19bceea6daf99906fd3d4b5907968e6cc966fc699bfe5d3b007123a"
+    },
+    "Confirm interceptor launch demonstration.": {
+      "file": "us/audio/narration/air_request.mp3?v=fb8c669feb5e",
+      "spoken_text": "Confirm interceptor launch demonstration.",
+      "seconds": 3.075,
+      "sha256": "fb8c669feb5e31208b2c445aa8a632922a51e9bde5d19b331b5732389a665336"
+    },
+    "Interceptor launching.": {
+      "file": "us/audio/narration/air_launch.mp3?v=be984e5a0f05",
+      "spoken_text": "Interceptor launching.",
+      "seconds": 1.975,
+      "sha256": "be984e5a0f0558bac04ef4c83bdb7c3eef63132726849455b5fc05d6ec549e0a"
+    },
+    "Launch confirmed. Stop vehicle.": {
+      "file": "us/audio/narration/air_stop.mp3?v=d2849df53579",
+      "spoken_text": "Launch confirmed. Stop vehicle.",
+      "seconds": 2.725,
+      "sha256": "d2849df53579469e2ae06fad4e048e7b86bb4aea1df42e50b771e249360d9452"
+    },
     "Person detected, ahead. Tracking and recording. Slow down.": {
-      "file": "us/audio/narration/contact_direction_0.mp3?v=4eaed941d13b",
+      "file": "us/audio/narration/contact_direction_0.mp3?v=f07b5df53529",
       "spoken_text": "Person detected, ahead. Tracking and recording. Slow down.",
-      "seconds": 7.175,
-      "sha256": "4eaed941d13b6414f4851dd058ae10693d7a7fc219b4c99be25aba5f785b06bd",
-      "slowdown_seconds": 6.175
+      "seconds": 6.95,
+      "sha256": "f07b5df53529861ba618b64a8e64e060f791062b46c347302337110ede9be695",
+      "slowdown_seconds": 5.95
     },
     "Air contact detected, ahead. Sentry One PTZ slewing.": {
-      "file": "us/audio/narration/air_direction_0.mp3?v=79a3aa73c8b4",
+      "file": "us/audio/narration/air_direction_0.mp3?v=ccfdaa91852e",
       "spoken_text": "Air contact detected, ahead. Sentry One P T Z slewing.",
-      "seconds": 4.75,
-      "sha256": "79a3aa73c8b4f0e6ccff95bec98d8dfe9af3d0b1514a640c073112e76081d9a4"
+      "seconds": 4.45,
+      "sha256": "ccfdaa91852e9412d1656f30da791581b9c9ee03199332057f35127ba35d0695"
     },
     "Person detected, ahead on the right. Tracking and recording. Slow down.": {
-      "file": "us/audio/narration/contact_direction_1.mp3?v=b15597340d65",
+      "file": "us/audio/narration/contact_direction_1.mp3?v=de2f2a925e01",
       "spoken_text": "Person detected, ahead on the right. Tracking and recording. Slow down.",
-      "seconds": 7.75,
-      "sha256": "b15597340d6589ba2b40e832a2a4502fd440a75c426270148b64a43a695b5f9b",
-      "slowdown_seconds": 6.75
+      "seconds": 7.625,
+      "sha256": "de2f2a925e0105918ac0fa3764997ef07982a3b37bb899964fcd1efaef6b40c1",
+      "slowdown_seconds": 6.625
     },
     "Air contact detected, ahead on the right. Sentry One PTZ slewing.": {
-      "file": "us/audio/narration/air_direction_1.mp3?v=35bba0d9373f",
+      "file": "us/audio/narration/air_direction_1.mp3?v=06822ab15ba8",
       "spoken_text": "Air contact detected, ahead on the right. Sentry One P T Z slewing.",
       "seconds": 5.275,
-      "sha256": "35bba0d9373fc0c9e31053b43926ba684b7cfe36732db8c99ed8aee65f2b1570"
+      "sha256": "06822ab15ba85d09f52b5f527cb67e21d9423c16bec35989b1d40019085ed5a4"
     },
     "Person detected, on the right. Tracking and recording. Slow down.": {
-      "file": "us/audio/narration/contact_direction_2.mp3?v=84093bdde51f",
+      "file": "us/audio/narration/contact_direction_2.mp3?v=d94f29dedd96",
       "spoken_text": "Person detected, on the right. Tracking and recording. Slow down.",
-      "seconds": 7.375,
-      "sha256": "84093bdde51fad1d6118427effbfe159dd3145b42c96a7fff6e8a85e11d5423d",
-      "slowdown_seconds": 6.375
+      "seconds": 7.125,
+      "sha256": "d94f29dedd9654a9968bed4874d222e6730f9203df5ef9aefd69ad4d15547f6b",
+      "slowdown_seconds": 6.125
     },
     "Air contact detected, on the right. Sentry One PTZ slewing.": {
-      "file": "us/audio/narration/air_direction_2.mp3?v=637d00a24717",
+      "file": "us/audio/narration/air_direction_2.mp3?v=18dd39413121",
       "spoken_text": "Air contact detected, on the right. Sentry One P T Z slewing.",
-      "seconds": 4.925,
-      "sha256": "637d00a24717bc2fb7dfd989df1acb53ff80385026d8835a07f3b8711b3ef797"
+      "seconds": 4.725,
+      "sha256": "18dd394131214ff452512643c89eeeb181a908ed1d8c7fd681f19f6759adf210"
     },
     "Person detected, behind on the right. Tracking and recording. Slow down.": {
-      "file": "us/audio/narration/contact_direction_3.mp3?v=f9249611dd48",
+      "file": "us/audio/narration/contact_direction_3.mp3?v=527524b9762c",
       "spoken_text": "Person detected, behind on the right. Tracking and recording. Slow down.",
-      "seconds": 7.875,
-      "sha256": "f9249611dd4863bbf019843550fc28bb8ec09fcf5811edea38d752ad7d88b4fe",
-      "slowdown_seconds": 6.875
+      "seconds": 7.7,
+      "sha256": "527524b9762cb2b34f13e3579853d0f4505f92ab36aadf4b34f3bb08cbb950b0",
+      "slowdown_seconds": 6.7
     },
     "Air contact detected, behind on the right. Sentry One PTZ slewing.": {
-      "file": "us/audio/narration/air_direction_3.mp3?v=d69e24d24e7b",
+      "file": "us/audio/narration/air_direction_3.mp3?v=b6fd2ef0d492",
       "spoken_text": "Air contact detected, behind on the right. Sentry One P T Z slewing.",
       "seconds": 5.425,
-      "sha256": "d69e24d24e7b6e367e967e8ac60be3cb67945383cbefa3cb169352748f9c5b05"
+      "sha256": "b6fd2ef0d4921ea8c9853190667bd38b4534288f15a70b20d1264e8920d59234"
     },
     "Person detected, behind. Tracking and recording. Slow down.": {
-      "file": "us/audio/narration/contact_direction_4.mp3?v=26c68d81fc84",
+      "file": "us/audio/narration/contact_direction_4.mp3?v=37808df6aee8",
       "spoken_text": "Person detected, behind. Tracking and recording. Slow down.",
-      "seconds": 7.325,
-      "sha256": "26c68d81fc8491bbc340b4d7eb6397cd1d96ddaefc26eea521e98c35c0b8e35a",
-      "slowdown_seconds": 6.325
+      "seconds": 7.075,
+      "sha256": "37808df6aee8fbdec26f072f1f15b25397011af989fdcf746ffa8f81b6798256",
+      "slowdown_seconds": 6.075
     },
     "Air contact detected, behind. Sentry One PTZ slewing.": {
-      "file": "us/audio/narration/air_direction_4.mp3?v=3154c20c4248",
+      "file": "us/audio/narration/air_direction_4.mp3?v=1a4bd8ff0998",
       "spoken_text": "Air contact detected, behind. Sentry One P T Z slewing.",
-      "seconds": 4.925,
-      "sha256": "3154c20c424890c9bd88e71f0fda8c910d0d454833dc1949b9b0f970113555f9"
+      "seconds": 4.625,
+      "sha256": "1a4bd8ff099883590f1389f1108d4932ecbe82e79bd7e3c0f5c150e07f0c470f"
     },
     "Person detected, behind on the left. Tracking and recording. Slow down.": {
-      "file": "us/audio/narration/contact_direction_5.mp3?v=5d550f0619eb",
+      "file": "us/audio/narration/contact_direction_5.mp3?v=06511a303257",
       "spoken_text": "Person detected, behind on the left. Tracking and recording. Slow down.",
-      "seconds": 7.95,
-      "sha256": "5d550f0619ebaf68551f32cc9756fffc8957ee16d2c113f4e2910e8ad0251dbd",
-      "slowdown_seconds": 6.95
+      "seconds": 7.8,
+      "sha256": "06511a303257978dc9c4f025fdf2c8673c284098ed8b144ed66e54a9be285bba",
+      "slowdown_seconds": 6.8
     },
     "Air contact detected, behind on the left. Sentry One PTZ slewing.": {
-      "file": "us/audio/narration/air_direction_5.mp3?v=b825d28824bb",
+      "file": "us/audio/narration/air_direction_5.mp3?v=e104ff10bf27",
       "spoken_text": "Air contact detected, behind on the left. Sentry One P T Z slewing.",
-      "seconds": 5.475,
-      "sha256": "b825d28824bb9082eba63254d7ace1895787a15cd995ed429c95dc90b00d7c98"
+      "seconds": 5.4,
+      "sha256": "e104ff10bf274a168e3ac3f7a4c9f4ae836d37fd4bf9cc09075475aaaa316691"
     },
     "Person detected, on the left. Tracking and recording. Slow down.": {
-      "file": "us/audio/narration/contact_direction_6.mp3?v=44f68e612c63",
+      "file": "us/audio/narration/contact_direction_6.mp3?v=4e4e8c9ca068",
       "spoken_text": "Person detected, on the left. Tracking and recording. Slow down.",
-      "seconds": 7.425,
-      "sha256": "44f68e612c635a2fef7fea2cc4f1c47a64851bf091d868928bd0da0bca8c05c9",
-      "slowdown_seconds": 6.425
+      "seconds": 7.2,
+      "sha256": "4e4e8c9ca068545ffce1a207ea3c3146b061a9a5d7c8a8c397b47928708e12d0",
+      "slowdown_seconds": 6.2
     },
     "Air contact detected, on the left. Sentry One PTZ slewing.": {
-      "file": "us/audio/narration/air_direction_6.mp3?v=88daab6309d1",
+      "file": "us/audio/narration/air_direction_6.mp3?v=c3c23ca366c9",
       "spoken_text": "Air contact detected, on the left. Sentry One P T Z slewing.",
-      "seconds": 4.95,
-      "sha256": "88daab6309d1ebc0bae396859f9a1e00a8137014e06d741dc8974fa23fdb7c2a"
+      "seconds": 4.75,
+      "sha256": "c3c23ca366c9aff3b1d38e54af7adc76e130869fe7f867f7aab19e73f5ea0fec"
     },
     "Person detected, ahead on the left. Tracking and recording. Slow down.": {
-      "file": "us/audio/narration/contact_direction_7.mp3?v=521e91a4e35d",
+      "file": "us/audio/narration/contact_direction_7.mp3?v=8f4eba379ed6",
       "spoken_text": "Person detected, ahead on the left. Tracking and recording. Slow down.",
-      "seconds": 7.825,
-      "sha256": "521e91a4e35d0a1b8500d5c8748ef0929cc78f47611dec691174e3fb2c8624e7",
-      "slowdown_seconds": 6.825
+      "seconds": 7.675,
+      "sha256": "8f4eba379ed6a6d1dd8320a0b5c5fa78b988520d504fa47ecde97fb5855c5afa",
+      "slowdown_seconds": 6.675
     },
     "Air contact detected, ahead on the left. Sentry One PTZ slewing.": {
-      "file": "us/audio/narration/air_direction_7.mp3?v=b79f3696a5d1",
+      "file": "us/audio/narration/air_direction_7.mp3?v=9266a0f0d044",
       "spoken_text": "Air contact detected, ahead on the left. Sentry One P T Z slewing.",
-      "seconds": 5.3,
-      "sha256": "b79f3696a5d1c9dd926ecaed061c15e837318ea70626167b433e7720b7682b42"
+      "seconds": 5.275,
+      "sha256": "9266a0f0d044cfbeeb974a67903c4e55cfe08ae81e25a4ad1fcb84e0e9d1e9d3"
     }
   }
 }
