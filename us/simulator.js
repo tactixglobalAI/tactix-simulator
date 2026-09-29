@@ -2550,13 +2550,7 @@
     orientationHint.hidden=false;clearTimeout(rotationHintTimer);
     rotationHintTimer=setTimeout(()=>{orientationHint.hidden=true;},7000);
   }
-  function placeFullscreenButton(){
-    const menu=document.querySelector('.view-options-panel'),nav=document.querySelector('.topbar nav');
-    if(mobileView.matches)nav.insertBefore(fullscreenButton,document.getElementById('viewOptions'));
-    else menu.prepend(fullscreenButton);
-    if(innerWidth>=innerHeight)orientationHint.hidden=true;
-  }
-  mobileView.addEventListener('change',placeFullscreenButton);window.addEventListener('resize',placeFullscreenButton);placeFullscreenButton();
+  window.addEventListener('resize',()=>{if(innerWidth>=innerHeight)orientationHint.hidden=true;});
   async function preferLandscape(){
     try{await screen.orientation?.lock('landscape');}catch(_){}
     showRotationHint();
@@ -2761,10 +2755,6 @@
       el.entryFade.style.opacity='1';setTimeout(()=>{el.entryFade.style.opacity='0';},120);
     }
   });
-  const viewOptions=document.getElementById('viewOptions');
-  viewOptions.addEventListener('click',event=>{if(event.target.closest('button'))viewOptions.open=false;});
-  document.addEventListener('pointerdown',event=>{if(!viewOptions.contains(event.target))viewOptions.open=false;});
-  document.addEventListener('keydown',event=>{if(event.key==='Escape' && viewOptions.open){viewOptions.open=false;viewOptions.querySelector('summary').focus();}});
   loadNpc(() => loadOfficer(loadCockpit));
   requestAnimationFrame(animate);
 })();

@@ -1,11 +1,4 @@
 .tour-preview-card { border-color:#6aafbf!important; }
-.view-options { position:relative; }
-.view-options summary { list-style:none; min-height:44px; display:flex; align-items:center; gap:12px; padding:0 16px; border:1px solid #526b80; background:#101f2d; color:#e6f2fa; cursor:pointer; font:11px monospace; letter-spacing:1px; }
-.view-options summary::-webkit-details-marker { display:none; }
-.view-options summary:focus-visible { outline:2px solid #9bd5ed; outline-offset:2px; }
-.view-options-panel { position:absolute; right:0; top:calc(100% + 8px); width:210px; padding:8px; background:rgba(7,16,24,.97); border:1px solid #526b80; display:grid; gap:6px; box-shadow:0 8px 22px #0006; }
-.view-options-panel button { position:static!important; width:100%; min-height:44px; margin:0!important; transform:none!important; }
-.view-options-panel button[hidden] { display:none!important; }
 .systems-tour { position:absolute; inset:0; z-index:35; pointer-events:auto; }
 .systems-tour[hidden] { display:none; }
 .tour-card { position:absolute; left:24px; top:90px; width:min(360px,38vw); padding:18px; background:rgba(7,16,24,.76); border:1px solid #c5dce8; color:#eef6fa; box-shadow:0 10px 40px #0005; }
@@ -48,3 +41,8 @@
 .phone-orientation-hint[hidden] { display:none; }
 .phone-orientation-hint button { min-width:44px; min-height:44px; margin-left:auto; font-size:22px; }
 @media(max-width:950px){ .topbar nav { align-items:center; gap:6px; } .topbar nav > #fullscreenButton { font-size:9px; padding:6px; } }
+
+#expandTouchscreen { display:none!important; }
+.topbar nav > .vehicle-view-toggle { position:static; min-height:44px; padding:8px 10px; font:10px monospace; }
+.topbar nav > .vehicle-view-toggle[hidden] { display:none; }
+@media(max-width:650px){ .topbar .brand { font-size:11px; } .topbar nav { gap:4px; } .topbar nav > .vehicle-view-toggle { padding:6px; font-size:9px; } }

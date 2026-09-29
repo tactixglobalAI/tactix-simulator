@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>TactixGlobal · US Operator Simulator</title>
   <link rel="stylesheet" href="styles.css?v=air-sky-4">
-  <link rel="stylesheet" href="us/systems-tour.css?v=5">
+  <link rel="stylesheet" href="us/systems-tour.css?v=6">
 </head>
 <body>
   <header class="topbar">
@@ -15,18 +15,13 @@
       <span class="product">US REGION SIMULATOR</span>
     </div>
     <nav aria-label="View controls">
-      <details id="viewOptions" class="view-options">
-        <summary>VIEW <span aria-hidden="true">▾</span></summary>
-        <div class="view-options-panel">
-          <button id="fullscreenButton" type="button">FULLSCREEN</button>
-          <button id="expandTouchscreen" class="expand-touchscreen" type="button" hidden>ENLARGE DISPLAY</button>
-          <button id="vehicleViewToggle" class="vehicle-view-toggle" type="button" aria-pressed="false" hidden>EXTERIOR VIEW</button>
-        </div>
-      </details>
+      <button id="fullscreenButton" type="button">FULLSCREEN</button>
+      <button id="vehicleViewToggle" class="vehicle-view-toggle" type="button" aria-pressed="false" hidden>EXTERIOR VIEW</button>
     </nav>
   </header>
 
   <main id="stage" class="stage">
+    <button id="expandTouchscreen" type="button" hidden aria-hidden="true" tabindex="-1">ENLARGE DISPLAY</button>
     <p id="fullscreenHint" class="fullscreen-hint" role="status" hidden></p>
     <canvas id="scene" aria-label="Interactive vehicle operator simulation"></canvas>
 
@@ -143,6 +138,6 @@
   <script src="us/environment.js?v=1"></script>
   <script src="us/tour-narration.js?v=3"></script>
   <script src="us/systems-tour.js?v=5"></script>
-  <script src="us/simulator.js?v=us-16"></script>
+  <script src="us/simulator.js?v=us-17"></script>
 </body>
 </html>
