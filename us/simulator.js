@@ -1096,7 +1096,7 @@
     if(label!==ui.lastLabel) {
       ui.lastLabel=label;
       ctx.fillStyle='#07121b';ctx.fillRect(0,0,720,480);
-      ctx.fillStyle='#b9d8e9';ctx.font='bold 30px monospace';ctx.fillText('SENTRY ONE PTZ',24,34);
+      ctx.fillStyle='#b9d8e9';ctx.font='bold 30px monospace';ctx.fillText('SENTRY ONE PTZ',48,38);
       ctx.fillStyle=ptzHolding()?'#efb94f':'#72d6ad';ctx.font='20px monospace';if(state===STATES.VEHICLE_FIRST_PERSON)ctx.fillText('STANDBY',420,31);
       ctx.fillStyle='#99adbc';ctx.font='20px monospace';
       ctx.fillText(Math.round(vehicleSpeed*2.236936).toString()+' mph · '+(selectedScenario==='interception'?(air.confirmed?'AIR CONTACT 01 · QUADCOPTER':air.phase==='PATROL'?'AIR SCAN':'AIR CONTACT · UNCONFIRMED'):ptzHolding()?personBearingLabel():state===STATES.DISMISSED?'DISMISSED · SCAN RESUMED':'VISIBLE + THERMAL ONLINE'),24,61);
@@ -2686,7 +2686,7 @@
     renderSensorView();
     renderTouchscreen();
     updateExpandedTouchscreen(now);
-    if(systemsTour?.active){systemsTour.update(elapsed);el.viewToggle.hidden=true;document.getElementById("expandTouchscreen").hidden=true;}
+    if(systemsTour?.active){systemsTour.update(elapsed);el.viewToggle.hidden=true;el.lookHint.hidden=true;document.getElementById("expandTouchscreen").hidden=true;}
     renderer.setViewport(0, 0, el.stage.clientWidth, el.stage.clientHeight);
     renderer.setScissorTest(false);
     renderer.render(scene, camera);
