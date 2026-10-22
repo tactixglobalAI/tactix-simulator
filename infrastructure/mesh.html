@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#101c27"><title>Instant Infrastructure — Mesh Network</title><link rel="stylesheet" href="viewer.css?v=5"></head>
+<body>
+<header><p class="eyebrow">TACTIX GLOBAL</p><h1>INSTANT INFRASTRUCTURE</h1><p class="tagline">COORDINATED INTELLIGENCE AT THE EDGE</p></header>
+<nav class="view-tabs" aria-label="System views"><a href="./">Single Vehicle</a><a href="mesh.html" aria-current="page">Mesh Network</a></nav>
+<main>
+<section class="visual" aria-label="Interactive mesh network">
+ <div class="toolbar" role="group" aria-label="View controls"><button id="labels" aria-pressed="true" disabled>Labels on</button><button id="reset" disabled>Reset view</button><button id="fullscreen">Fullscreen</button></div>
+ <div id="stage"><canvas id="view" aria-label="3D vehicle. Drag to rotate, scroll or pinch to zoom. Use arrow keys to rotate." tabindex="0"></canvas><svg id="leaders" aria-hidden="true"></svg><div id="annotations"></div><div id="loading" role="status" aria-live="polite"><span class="spinner"></span><span id="load-text">Loading the mesh network…</span></div><div id="rack-state">Blue dashed: wireless links · Teal: physical tether · Spacing compressed · Vehicles 1–2 km apart · Drone up to 50 m</div></div>
+ <div class="viewer-caption"><span>Drag to explore · Scroll or pinch to zoom</span><span>Two vehicles · Fixed sensor tower · Aerial relay · tactixglobalMCT</span></div>
+ <p class="local">VEHICLE-TO-VEHICLE MESH <span>/</span> NO CLOUD DEPENDENCY</p>
+ <aside id="details" hidden aria-live="polite"><button id="close-details" aria-label="Close component details">×</button><h3></h3><p></p></aside>
+</section>
+<aside class="capabilities"><h2>CONNECTED VEHICLES. SHARED INTELLIGENCE.</h2>
+<article><h3>UNIFIED COMMAND VIEW · tactixglobalMCT</h3><p>View all connected assets in one command-center system. Collect timestamped events, observations, and video clips from multiple vehicles and fixed sensor units over the mesh.</p></article>
+<article><h3>GENERATE END-OF-DAY REPORTS</h3><p>tactixglobalMCT uses an LLM to process events collected across units and compile an end-of-day mission report for operator review.</p></article>
+<article><h3>SEARCH EVENTS BY VOICE</h3><p>Ask tactixglobalMCT to find events by timestamp or time range—for example, “Show events from Vehicle 2 between 14:00 and 15:00.”</p></article>
+<article><h3>ELEVATE SENSING AND CONNECTIVITY</h3><p>A drone tethered to Vehicle 1 provides an elevated camera and a relay path above ground-level obstructions. Maximum operating height: 50 meters.</p></article>
+<article><h3>INTEGRATE FIXED SENSOR TOWERS</h3><p>Pole-mounted nodes combine a top-mounted PTZ, acoustic sensors, mesh radios, and enclosed edge compute and battery power, with a side-mounted solar panel. They coordinate sensing and share intelligence with the vehicles.</p></article>
+<article><h3>CONNECT WITH EXISTING MESH</h3><p>Integrate with compatible mesh infrastructure to extend intelligence sharing to another vehicle or command center.</p></article>
+<article><h3>OPERATE INDEPENDENTLY</h3><p>Local processing and mesh communication without external Wi-Fi, cellular service, or cloud dependency.</p></article>
+<article><h3>SHARE WITH MISSION CONTROL</h3><p>Share selected observations, video clips, and intelligence across the local mesh without relying on external Wi-Fi or cellular networks.</p></article>
+</aside></main>
+<footer><span>TACTIX GLOBAL · INSTANT INFRASTRUCTURE</span><a href="../THIRD_PARTY_NOTICES.md">Asset credits</a></footer>
+<noscript>This interactive model needs JavaScript. The system capabilities are listed on this page.</noscript>
+<script src="../vendor/three-0.128.0/three.min.js"></script><script src="../vendor/three-0.128.0/GLTFLoader.js"></script><script src="vendor/DRACOLoader.js"></script><script src="vendor/OrbitControls.js"></script><script src="mesh.js?v=5"></script>
+</body></html>

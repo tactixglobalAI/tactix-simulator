@@ -42,3 +42,11 @@ US quadcopter derivative retains the above CC BY 4.0 attribution. Separate origi
 US narration uses the same credited Kokoro model with af_heart American fefemale voice weights; all US MP3s are local generated assets. No Google voice or service is used.
 
 The optional US systems-tour preview uses Kokoro `af_heart` American female narration, generated locally at speed 1.0 from the same pinned model revision. Only rendered MP3s are delivered to browsers; there is no cloud speech service. Enclosure and Jetson reference images in `us/assets/systems-tour/` were supplied by the user for this preview; they are illustrative hardware references, not authored CAD or evidence of models running in the browser.
+
+## Instant Infrastructure interactive viewer
+
+The `/infrastructure/` viewer reuses the credited US SUV and owner-supplied recon and PTZ geometry. Modifications include removal of police lettering, a roof rack, acoustic pods, dual mesh radios, battery, edge computer, and interactive component selection.
+
+Roof basket: owner-supplied purchased Autodesk FBX asset (Roof Basket Racks, standard license purchase shown by owner). Acoustic pod: owner-supplied Stable.stl. Edge computer: owner-supplied reComputer-J4012.stp. The battery, mesh radio housing, antennas, pole, solar panel, command shelter and relay illustration are project-authored or adapted from owner-provided references. No source CAD, purchased archives, or Blender authoring files are included in the public runtime. These assets do not grant visitors independent redistribution rights.
+
+OrbitControls and DRACOLoader are from Three.js 0.128.0 (MIT; see vendor/three-0.128.0/LICENSE). The Draco decoder is distributed under Apache 2.0; see infrastructure/vendor/DRACO-LICENSE.txt.

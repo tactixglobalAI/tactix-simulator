@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#101c27"><title>Instant Infrastructure — Interactive Roof System</title><link rel="stylesheet" href="viewer.css?v=8"></head>
+<body>
+<header><p class="eyebrow">TACTIX GLOBAL</p><h1>INSTANT INFRASTRUCTURE</h1><p class="tagline">COORDINATED INTELLIGENCE AT THE EDGE</p></header>
+<nav class="view-tabs" aria-label="System views"><a href="./" aria-current="page">Single Vehicle</a><a href="mesh.html">Mesh Network</a></nav>
+<main>
+<section class="visual" aria-label="Interactive vehicle and roof system">
+ <div class="toolbar" role="group" aria-label="View controls"><button id="labels" aria-pressed="true" disabled>Labels on</button><button id="all-components" aria-pressed="false" disabled>Show all components</button><button id="back-groups" hidden>Back to groups</button><button id="rack" aria-pressed="false" disabled>Lift rack</button><button id="reset" disabled>Reset view</button><button id="fullscreen">Fullscreen</button></div>
+ <div id="stage"><canvas id="view" aria-label="3D vehicle. Drag to rotate, scroll or pinch to zoom. Use arrow keys to rotate." tabindex="0"></canvas><svg id="leaders" aria-hidden="true"></svg><div id="annotations"></div><div id="loading" role="status" aria-live="polite"><span class="spinner"></span><span id="load-text">Loading the roof system…</span></div><div id="rack-state" aria-live="polite"></div></div>
+ <div class="viewer-caption"><span>Click a component for details · Drag to explore · Scroll or pinch to zoom</span><span>Lift rack to see the complete module</span></div>
+ <p class="local">LOCAL PROCESSING <span>/</span> NO CLOUD DEPENDENCY</p>
+ <aside id="details" hidden aria-live="polite"><button id="close-details" aria-label="Close component details">×</button><h3></h3><p></p></aside>
+</section>
+<aside class="capabilities"><h2>ONE VEHICLE. ONE INTEGRATED SYSTEM.</h2>
+ <article><h3>DEPLOY AS ONE SYSTEM</h3><p>Integrated sensing, compute, mesh radio, and onboard power on one roof rack.</p></article>
+ <article><h3>ORCHESTRATE AT THE EDGE</h3><p>Behavior-tree workflows coordinate available sensors and onboard AI.</p></article>
+ <article><h3>TWO-WAY VOICE INTERACTION</h3><p>Direct sensors and request observations by voice. The system reports detections, asks for follow-up instructions, and carries out coordinated workflows.</p></article>
+ <article><h3>DETECT, VERIFY, INFORM</h3><p>Coordinate follow-up sensing and surface relevant events for operator review.</p></article>
+ <article><h3>GENERATE MISSION SITREPs</h3><p>Compile recorded events and operator actions into reviewable mission reports.</p></article>
+<article><h3>KEEP MISSION DATA LOCAL</h3><p>Process sensor data and generate mission reports onboard, without requiring cloud services.</p></article>
+</aside></main>
+<footer><span>TACTIX GLOBAL · INSTANT INFRASTRUCTURE</span><a href="../THIRD_PARTY_NOTICES.md">Asset credits</a></footer>
+<noscript>This interactive model needs JavaScript. The system capabilities are listed on this page.</noscript>
+<script src="../vendor/three-0.128.0/three.min.js"></script><script src="../vendor/three-0.128.0/GLTFLoader.js"></script><script src="vendor/DRACOLoader.js"></script><script src="vendor/OrbitControls.js"></script><script src="viewer.js?v=8"></script>
+</body></html>
