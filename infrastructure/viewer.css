@@ -19,3 +19,8 @@ body:not(.mesh) #leaders line,body:not(.mesh) #detail-guide line{stroke:#72d2f3}
 body:not(.mesh) #detail-guide circle{fill:#72d2f3}
 
 .scenario-options{display:flex;flex-wrap:wrap;gap:8px;margin:16px 3vw 0;border:0;padding:0}.scenario-options legend{font-size:12px;color:#4b6271;margin-bottom:8px}.scenario-options label{display:flex;align-items:center;gap:8px;min-height:44px;padding:9px 14px;border:1px solid #9fb3c0;border-radius:6px;background:#f2f6f8;cursor:pointer;font-size:13px}.scenario-options label:has(:checked){background:#123b51;color:white}.scenario-options input{accent-color:#199ac7}.mission-kicker{color:#8fcce1!important;font-size:11px!important;letter-spacing:.14em;margin-bottom:10px!important}#mission-note{font-size:12px;color:#a8c1d0;margin-top:24px}.scenario-marker{position:absolute;left:50%;top:14px;transform:translateX(-50%);background:#153849;color:#fff;border:1px solid #86bfd2;padding:8px 12px;font-size:12px;border-radius:6px;pointer-events:none;z-index:3;text-align:center;max-width:80%}.scenarios #mission-title{font-size:22px}.scenarios #stage{height:clamp(520px,70vh,850px)}
+
+.thermal-options{display:flex;gap:8px;margin-top:12px}.imaging-caption{font-size:12px;color:#40596b;margin:8px 0 0}
+
+/* Mission scenes keep only navigation controls; detailed hardware stays in Single Vehicle. */
+.scenarios #labels,.scenarios #all-components,.scenarios #back-groups,.scenarios #rack,.scenarios #viewer-back-groups,.scenarios #details-back-groups,.scenarios .thermal-options,.scenarios .imaging-caption{display:none!important}

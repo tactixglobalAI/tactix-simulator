@@ -1,8 +1,7 @@
 # Instant Infrastructure
 
-Single vehicle: ./
-Mesh network: ./mesh.html
+Interactive views: Single Vehicle (`./`), Mesh Network (`./mesh.html`), and Scenarios (`./scenarios.html`).
 
-Static interactive presentation with local Three.js and Draco assets. Drag to orbit; scroll/pinch to zoom. Labels can be grouped, expanded or hidden. Click vehicle hardware for details even with labels hidden. Lift rack separates the complete assembly. No live sensor-control or command-center connection is provided by this presentation page.
+Scenarios provides five selectable mission environments with generic vehicle markings, objectives, capabilities, and example operator interaction. The presentation is static and does not connect to live sensors. The refinery illustrates operator-led inspection with an assumed thermal payload; its tethered drone reuses the roof drone model. The military airborne target is labeled Unidentified drone.
 
-Release: 2026-10-22. The Scenarios tab remains in development and is intentionally excluded.
+Three.js, decoder, and model assets are local. Human geometry reuses the credited us_hooded_npc.glb. Source CAD and Blender files are excluded. Release: 2026-10-22.
