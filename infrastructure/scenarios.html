@@ -1,15 +1,15 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#101c27"><title>Instant Infrastructure — Mission Scenarios</title><link rel="stylesheet" href="viewer.css?v=20261022b"></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#101c27"><title>Instant Infrastructure — Your Mission</title><link rel="stylesheet" href="viewer.css?v=20261022b"><link rel="stylesheet" href="presentation.css?v=20261024"></head>
 <body class="scenarios">
 <header><p class="eyebrow">TACTIX GLOBAL</p><h1>INSTANT INFRASTRUCTURE</h1><p class="tagline">COORDINATED INTELLIGENCE AT THE EDGE</p></header>
-<nav class="view-tabs" aria-label="System views"><a href="./">Single Vehicle</a><a href="mesh.html">Mesh Network</a><a href="scenarios.html" aria-current="page">Scenarios</a><a href="workflow.html">Mission &amp; Decisions</a></nav>
-<fieldset class="scenario-options"><legend>Select a mission environment</legend>
+<nav class="view-tabs" aria-label="Presentation sections"><a href="overview.html">Overview</a><a href="scenarios.html" aria-current="page">What Can It Do for You?</a><a href="index.html">The System</a><a href="mesh.html">Connected Operations</a><a href="workflow.html">Decisions &amp; Reports</a><a href="privacy.html">Privacy &amp; Control</a></nav><section class="chapter-intro"><h2>Put the system to work.</h2><p>Explore the operational benefits, supporting features, and service opportunities for your mission.</p></section>
+<fieldset class="scenario-options"><legend>Choose your mission</legend>
 <label><input type="radio" name="scenario" value="patrol" checked>Private Patrol</label>
-<label><input type="radio" name="scenario" value="refinery">Oil Refinery</label>
-<label><input type="radio" name="scenario" value="police">Police</label>
-<label><input type="radio" name="scenario" value="port">Port Security</label>
-<label><input type="radio" name="scenario" value="military">Military</label>
-</fieldset><main>
+<label><input type="radio" name="scenario" value="refinery">Industrial Sites</label>
+<label><input type="radio" name="scenario" value="police">Law Enforcement</label>
+<label><input type="radio" name="scenario" value="port">Ports</label>
+<label><input type="radio" name="scenario" value="military">Defense</label>
+<label><input type="radio" name="scenario" value="emergency">Emergency Connectivity</label></fieldset><main>
 <section class="visual" aria-label="Interactive vehicle and roof system">
  <div class="toolbar" role="group" aria-label="View controls"><button id="labels" aria-pressed="true" disabled>Labels on</button><button id="all-components" aria-pressed="false" disabled>Show all components</button><button id="back-groups" hidden>Back to groups</button><button id="rack" aria-pressed="false" disabled>Lift rack</button><button id="reset" disabled>Reset view</button><button id="fullscreen">Fullscreen</button></div>
  <div id="stage"><canvas id="view" aria-label="3D vehicle. Drag to rotate, scroll or pinch to zoom. Use arrow keys to rotate." tabindex="0"></canvas><svg id="leaders" aria-hidden="true"></svg><div id="annotations"></div><div id="loading" role="status" aria-live="polite"><span class="spinner"></span><span id="load-text">Loading the roof system…</span></div><div id="rack-state" aria-live="polite"></div></div>
@@ -18,14 +18,14 @@
  <aside id="details" hidden aria-live="polite"><button id="close-details" aria-label="Close component details">×</button><h3></h3><p></p></aside>
 </section>
 <aside class="capabilities" id="mission-panel" aria-live="polite"><p class="mission-kicker">MISSION EXAMPLE</p><h2 id="mission-title">Private Patrol</h2>
-<article><h3>MISSION OBJECTIVES</h3><p id="mission-objectives"></p></article>
-<article><h3>WHAT THE SYSTEM CAN DO</h3><p id="mission-capabilities"></p></article>
-<article><h3>EXAMPLE SYSTEM ALERT</h3><p id="mission-alert"></p></article>
+<article><h3>WHY IT MATTERS</h3><p id="mission-benefit"></p></article><article><h3 id="mission-value-heading">SERVICE OPPORTUNITY</h3><p id="mission-value"></p></article><article><h3>MISSION OBJECTIVES</h3><p id="mission-objectives"></p></article>
+<article><h3>SUPPORTING FEATURES</h3><p id="mission-capabilities"></p></article>
+<details class="scenario-example"><summary>See an example workflow</summary><article><h3>EXAMPLE SYSTEM ALERT</h3><p id="mission-alert"></p></article>
 <article><h3>YOUR FOLLOW-UP COMMAND</h3><p id="mission-command"></p></article>
 <article><h3>RECORD &amp; REPORT</h3><p>Share selected clips and timestamped events with tactixglobalMCT for multi-unit review, voice search, and end-of-day reporting.</p></article>
-<p id="mission-note"></p>
-</aside></main>
+</details><p id="mission-note"></p>
+</aside></main><nav class="chapter-navigation" aria-label="Presentation navigation"><a href="overview.html">← Overview</a><a class="chapter-next" href="index.html">Next: The System →</a></nav>
 <footer><span>TACTIX GLOBAL · INSTANT INFRASTRUCTURE</span><a href="../THIRD_PARTY_NOTICES.md">Asset credits</a></footer>
 <noscript>This interactive model needs JavaScript. The system capabilities are listed on this page.</noscript>
-<script src="../vendor/three-0.128.0/three.min.js"></script><script src="../vendor/three-0.128.0/GLTFLoader.js"></script><script src="vendor/DRACOLoader.js"></script><script src="vendor/OrbitControls.js"></script><script src="equipment-finish.js?v=1"></script><script src="drone-deployment.js?v=20261022b"></script><script src="scenarios.js?v=20261022b"></script><script src="viewer.js?v=20261022c"></script>
+<script src="../vendor/three-0.128.0/three.min.js"></script><script src="../vendor/three-0.128.0/GLTFLoader.js"></script><script src="vendor/DRACOLoader.js"></script><script src="vendor/OrbitControls.js"></script><script src="equipment-finish.js?v=1"></script><script src="drone-deployment.js?v=20261022b"></script><script src="scenarios.js?v=20261024b"></script><script src="viewer.js?v=20261022c"></script>
 </body></html>
